@@ -4,11 +4,11 @@
   "author": "my@email.com",
   "description": "Extension for skipping muted VOD sections on Twitch.tv.",
   "homepage_url": "https://github.com/Thnderbread/twitchextension",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "content_scripts": [
     {
       "matches": ["*://.twitch.tv/videos/"],
-      "run_at": "document_idle",
+      "run_at": "document_idle",  
       "js": ["./contentScript/index.js"],
       "css": ["./style.css"]
     }
