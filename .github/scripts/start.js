@@ -13,7 +13,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 /**
  * start WebDriver session with extension installed
  */
-async function startBrowser (browserName) {
+async function startBrowser(browserName) {
   const capabilities = browserName === 'chrome'
     ? {
       browserName,
