@@ -2,11 +2,14 @@ import browser from "webextension-polyfill";
 import { HelixVideo } from "@twurple/api";
 import { ApiClient } from "@twurple/api/lib";
 import { ExtensionAuthProvider } from "@twurple/auth-ext/lib";
-import { HelixVideoMutedSegmentData, HelixVideoData, } from "@twurple/api/lib/interfaces/endpoints/video.external";
+import { HelixVideoMutedSegmentData, } from "@twurple/api/lib/interfaces/endpoints/video.external";
 
-let clientId;
-const authProvider = new ExtensionAuthProvider(clientId);
-const api = new ApiClient({ authProvider });
+function getApi(clientID: string | undefined): ApiClient | undefined {
+  if (clientID !== undefined) {
+    const authProvider = new ExtensionAuthProvider(clientID);
+    return new ApiClient({ authProvider })
+  }
+}
 
 type Message = {
   action: 'fetch',
@@ -28,7 +31,7 @@ async function handleMessage({action, value}: Message, response: ResponseCallbac
 }
 
 /**
- * Given a vodId, attempt to retrieve the VOD's muted segments data.
+ * Given a vodID, attempt to retrieve the VOD's muted segments data.
  * We then format that data by adding the endingOffset property 
  * for skipping. We also sort the array to make sure the muted
  * segments are in order.
@@ -44,12 +47,12 @@ type MutedVodSegment = {
 
 type Vod = HelixVideo | null
 
-function formatMutedSegmentsData(video: Vod, mutedSegments: HelixVideoMutedSegmentData[]): MutedVodSegment[] {
+function formatMutedSegmentsData(vod: Vod, mutedSegments: HelixVideoMutedSegmentData[]): MutedVodSegment[] {
   return mutedSegments
     .map(segment => {
     const formattedSegment: MutedVodSegment = {
-      id: video?.id,
-      title: video?.title,
+      id: vod?.id,
+      title: vod?.title,
       duration: segment.duration,
       startingOffset: segment.offset,
       endingOffset: segment.offset + segment.duration
@@ -59,8 +62,14 @@ function formatMutedSegmentsData(video: Vod, mutedSegments: HelixVideoMutedSegme
     .sort()
 }
 
-async function getMutedVodSegmentsFromTwitch(vodId: string): Promise<MutedVodSegment[] | undefined> {
-  const vod = await api.videos.getVideoById(vodId)
+async function getMutedVodSegmentsFromTwitch(vodID: string): Promise<MutedVodSegment[] | undefined> {
+  const api = getApi(process.env.clientID);
+  
+  if (!api) {
+    throw new Error("Could not create api client.");
+  }
+
+  const vod = await api.videos.getVideoById(vodID)
   const mutedSegments = vod?.mutedSegmentData
 
   // Checking for undefined here also covers if the vod
@@ -79,5 +88,9 @@ browser.runtime.onMessage.addListener((msg, sender, response) => {
 });
 
 browser.runtime.onMessage.addListener((message) => {
-  return getMutedVodSegmentsFromTwitch(message.vodId);
+  try {
+    return getMutedVodSegmentsFromTwitch(message.vodID);
+  } catch (error) {
+    return error
+  }
 })
