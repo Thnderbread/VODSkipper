@@ -1,8 +1,8 @@
 import browser from "webextension-polyfill";
-import { HelixVideo } from "@twurple/api";
 import { ApiClient } from "@twurple/api/lib";
 import { ExtensionAuthProvider } from "@twurple/auth-ext/lib";
-import { HelixVideoMutedSegmentData, } from "@twurple/api/lib/interfaces/endpoints/video.external";
+import { HelixVideoMutedSegmentData } from "@twurple/api/lib/interfaces/endpoints/video.external";
+import { Vod, MutedVodSegment } from "../types";
 
 function getApi(clientID: string | undefined): ApiClient | undefined {
   if (clientID !== undefined) {
@@ -36,16 +36,6 @@ async function handleMessage({action, value}: Message, response: ResponseCallbac
  * for skipping. We also sort the array to make sure the muted
  * segments are in order.
 */
-
-type MutedVodSegment = {
-  id: string | undefined,
-  title: string | undefined,
-  duration: number,
-  endingOffset: number,
-  startingOffset: number,
-}
-
-type Vod = HelixVideo | null
 
 function formatMutedSegmentsData(vod: Vod, mutedSegments: HelixVideoMutedSegmentData[]): MutedVodSegment[] {
   return mutedSegments
