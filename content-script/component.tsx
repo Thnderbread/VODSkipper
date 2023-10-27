@@ -2,6 +2,7 @@ import React, { useState, useEffect, useReducer } from "react"
 import browser from "webextension-polyfill"
 import { SkipMethod, MutedVodSegment, State, Action } from "../types"
 
+// this should only be on main branch
 const DEFAULTSEGMENT = {
   startingOffset: 0,
   endingOffset: 0,
@@ -10,7 +11,6 @@ const DEFAULTSEGMENT = {
 
 // const EXPIRES_IN = 259_000_000
 const initialState: State = {
-  listeningForUndo: false,
   defaultSkipMethod: "auto",
   mutedSegments: [],
   nearestSegment: DEFAULTSEGMENT,
@@ -25,8 +25,6 @@ function reducer(state: State, action: Action) {
       return { ...state, mutedSegments: action.payload }
     case "SET_PREV_MUTED_SEGMENT":
       return { ...state, prevMutedSegment: action.payload }
-    case "SET_UNDO_LISTEN":
-      return { ...state, listeningForUndo: action.payload }
     case "SET_SKIP_METHOD":
       return { ...state, defaultSkipMethod: action.payload }
     default:
@@ -212,29 +210,7 @@ export default () => {
       ) {
         // check if the user tried to undo a skip
         // TODO: if listening for an undo and a user goes somewhere else, what will happen?
-        if (state.listeningForUndo) {
-          browser.browserAction.onClicked.addListener(() => {
-            if (state.prevMutedSegment) {
-              video.currentTime = state.prevMutedSegment.startingOffset
-              // ? useReducer
-              dispatch({ type: "SET_NEAREST", payload: state.prevMutedSegment })
-              // setNearestSegment(prevMutedSegment)
-              dispatch({
-                type: "SET_PREV_MUTED_SEGMENT",
-                payload: DEFAULTSEGMENT,
-              })
-              // setPrevMutedSegment(undefined)
-              dispatch({ type: "SET_UNDO_LISTEN", payload: false })
-              // setListeningForUndo(false)
-            }
-          })
-          // clear undo listener
-          setTimeout(() => {
-            dispatch({ type: "SET_UNDO_LISTEN", payload: false })
-            // setListeningForUndo(false)
-          }, UNDOTIMEOUT)
-          // listen for icon click before initiating manual skip
-        } else if (state.defaultSkipMethod === "manual") {
+        if (state.defaultSkipMethod === "manual") {
           browser.browserAction.onClicked.addListener(() => {
             video.currentTime = state.nearestSegment.endingOffset
             // ? useReducer
@@ -247,12 +223,9 @@ export default () => {
               type: "SET_NEAREST",
               payload: findNearestMutedSegment(state.mutedSegments),
             })
-            // setNearestSegment(findNearestMutedSegment(mutedSegments))
-            dispatch({ type: "SET_UNDO_LISTEN", payload: true })
-            // setListeningForUndo(true)
           })
           // auto skip
-        } else if (state.defaultSkipMethod === "auto") {
+        } else {
           // ? useReducer
           video.currentTime = state.nearestSegment.endingOffset
           dispatch({
@@ -264,9 +237,6 @@ export default () => {
             type: "SET_NEAREST",
             payload: findNearestMutedSegment(state.mutedSegments),
           })
-          // setNearestSegment(findNearestMutedSegment(mutedSegments))
-          dispatch({ type: "SET_UNDO_LISTEN", payload: true })
-          // setListeningForUndo(true)
         }
       }
     }, INTERVAL)
