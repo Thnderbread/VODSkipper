@@ -1,8 +1,35 @@
 import { HelixVideo } from "@twurple/api/lib"
+import { Browser } from "webextension-polyfill"
 
 export type SkipMethod = "auto" | "manual"
 
 export type Vod = HelixVideo | null
+
+export type FindNearestMutedSegmentFunction = (
+  video: HTMLVideoElement,
+  mutedSegments: MutedVodSegment[],
+  DEFAULTSEGMENT: DefaultVodSegment,
+) => MutedVodSegment
+
+export type ListenForMutedSegmentsFunction = (
+  video: HTMLVideoElement,
+  browser: Browser,
+  DEFAULTSEGMENT: DefaultVodSegment,
+  state: State,
+  dispatch: React.Dispatch<Action>,
+) => NodeJS.Timeout
+
+export type FetchMutedSegmentsFunction = (
+  video: HTMLVideoElement,
+  browser: Browser,
+  dispatch: React.Dispatch<Action>,
+) => Promise<void>
+
+export type HandleSeekFunction = (
+  video: HTMLVideoElement,
+  state: State,
+  dispatch: React.Dispatch<Action>,
+) => void
 
 export type MutedVodSegment = {
   id?: string
@@ -12,8 +39,11 @@ export type MutedVodSegment = {
   startingOffset: number
 }
 
+export type DefaultVodSegment = {
+  default: boolean
+} & MutedVodSegment
+
 export interface State {
-  listeningForUndo: boolean
   defaultSkipMethod: SkipMethod
   nearestSegment: MutedVodSegment
   mutedSegments: MutedVodSegment[]
@@ -21,7 +51,6 @@ export interface State {
 }
 
 export type Action =
-  | { type: "SET_UNDO_LISTEN"; payload: boolean }
   | { type: "SET_SKIP_METHOD"; payload: SkipMethod }
   | { type: "SET_NEAREST"; payload: MutedVodSegment }
   | { type: "SET_MUTED_SEGMENTS"; payload: MutedVodSegment[] }
