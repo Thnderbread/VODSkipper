@@ -32,7 +32,7 @@ async function startBrowser(browserName) {
     await browser.installAddOn(extension.toString('base64'), true)
   }
 
-  await browser.url('https://github.com/stateful/web-extension-starter-kit')
+  await browser.url('https://www.twitch.tv/videos/1954413289')
 }
 
 const browserName = process.argv.slice(2).pop() || 'chrome'
