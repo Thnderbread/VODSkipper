@@ -2,7 +2,6 @@ import React, { useState, useEffect, useReducer } from "react"
 import browser from "webextension-polyfill"
 import { SkipMethod, MutedVodSegment, State, Action } from "../types"
 
-// this should only be on main branch
 const DEFAULTSEGMENT = {
   startingOffset: 0,
   endingOffset: 0,
@@ -36,16 +35,8 @@ export default () => {
   const [fact, setFact] = useState("Click the button to fetch a fact!")
   const [loading, setLoading] = useState(false)
 
-  // @ts
   const [state, dispatch] = useReducer(reducer, initialState)
 
-  const [nearestSegment, setNearestSegment] = useState<MutedVodSegment>() // stores the nearest muted segment.
-  const [mutedSegments, setMutedSegments] = useState<MutedVodSegment[]>([]) // current VOD's muted segments
-
-  const [prevMutedSegment, setPrevMutedSegment] = useState<MutedVodSegment>() // for undoes
-  const [defaultSkipMethod, setDefaultSkipMethod] = useState<SkipMethod>("auto") // default skip method - user's preferred choice
-
-  const [listeningForUndo, setListeningForUndo] = useState(false)
   const video = document.querySelector("video") as HTMLVideoElement
 
   // Flow:
@@ -61,10 +52,12 @@ export default () => {
   // }, [SkipMethod])
 
   async function handleOnClick() {
+    console.log("Clicked!")
     setLoading(true)
     const { data } = await browser.runtime.sendMessage({ action: "fetch" })
     setFact(data)
     setLoading(false)
+    console.log("Video: ", video)
   }
 
   /**
