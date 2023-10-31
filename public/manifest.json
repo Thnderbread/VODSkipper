@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "SkipTwitch",
+  "name": "VodSkipper",
   "author": "my@email.com",
   "description": "Extension for skipping muted VOD sections on Twitch.tv.",
   "homepage_url": "https://github.com/Thnderbread/twitchextension",
@@ -18,7 +18,7 @@
   },
   "action": {
     "default_popup": "./popup/index.html",
-    "default_title": "SkipTwitch"
+    "default_title": "VodSkipper"
   },
   "browser_specific_settings": {
     "gecko": {
