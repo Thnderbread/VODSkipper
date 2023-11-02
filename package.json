@@ -1,6 +1,6 @@
 {
   "name": "vodskipper",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A web extension for skipping muted VOD sections on Twitch.tv.",
   "author": "Thnderbread",
   "license": "MIT",
