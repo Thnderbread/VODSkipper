@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useReducer } from "react"
 import browser from "webextension-polyfill"
 import { SkipMethod, MutedVodSegment, State, Action } from "../types"
+import { ToggleSwitchWithLabel } from "../common/ToggleSwitch"
+import { messages } from "../popup/component"
 
 const DEFAULTSEGMENT = {
   startingOffset: 0,
@@ -193,6 +195,9 @@ export default () => {
      * TODO: Fix to check length of keys.
      */
     setInterval(() => {
+      /**
+       * Nothing to wait for - no next segment.
+       */
       if (state.nearestSegment === undefined) {
         return
       }
@@ -236,17 +241,27 @@ export default () => {
   }
 
   return (
-    <div className="absolute top-20 left-20">
-      <div className="flex flex-col gap-4 p-4 shadow-sm bg-gradient-to-r from-purple-500 to-pink-500 w-96 rounded-md">
-        <h1>Cat Facts!</h1>
-        <button
-          className="px-4 py-2 font-semibold text-sm bg-cyan-500 text-white rounded-full shadow-sm disabled:opacity-75 w-48"
-          disabled={loading}
-          onClick={handleOnClick}
-        >
-          Get a Cat Fact!
-        </button>
-        <p className="text-white">{fact}</p>
+    <div className="flex flex-col gap-4 p-4 shadow-sm bg-black bg-opacity-100 p-4 w-96">
+      <h1>VODSkipper</h1>
+      <div className="border border-solid border-gray-700"></div>
+      <div>
+        <ToggleSwitchWithLabel
+          switchTitle={"Prompt Me Before Skipping"}
+          switchDescription={
+            "Check to be prompted before skipping a muted section."
+          }
+          manualSkip={state.defaultSkipMethod === "manual" ? true : false}
+          setManualSkip={(manualSkip: boolean) => !manualSkip}
+        />
+      </div>
+
+      <div className="border border-solid border-gray-700"></div>
+
+      <div
+        hidden={false}
+        className="text-center justify-center text-lg text-white mb-10"
+      >
+        {messages.passedAllSegmentsMessage}
       </div>
     </div>
   )

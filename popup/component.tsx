@@ -1,18 +1,61 @@
 import clsx from "clsx"
 import React, { useState } from "react"
 import browser from "webextension-polyfill"
+import { PopupMessages, SwitchProps } from "../common/stuff"
 
-export interface SwitchProps {
-  switchTitle: string
-  switchDescription: string
+/**
+ * Shows the given time in a friendlier HH:mm:ss format.
+ *
+ * @param seconds The current time in seconds to format.
+ * @returns A HH:mm:ss string based on the given seconds value.
+ */
+function formatCurrentTime(seconds: number): string {
+  if (isNaN(seconds)) {
+    return ""
+  }
+
+  /**
+   * Creates a string for the given number.
+   * Adds a 0 in front of the given number if
+   * necessary.
+   *
+   * @param time The number to beautify.
+   * @returns The number as a string.
+   */
+  function beautifyNumber(time: number): string {
+    return time > 10
+      ? Math.floor(time).toString()
+      : Math.floor(time).toString().padStart(2, "0")
+  }
+
+  /**
+   * Format the number. If the current time is under 60s,
+   * pass it to beautifyNumber and return it.
+   *
+   * Otherwise - calculate the needed values (HH, mm, ss),
+   * construct a string based off of them, and return that.
+   */
+  if (seconds < 60) {
+    return beautifyNumber(seconds)
+  } else if (seconds < 3600) {
+    const minutes = beautifyNumber(Math.floor(seconds / 60))
+    const remainingSeconds = beautifyNumber(seconds % 60)
+    return `${minutes}:${remainingSeconds}.`
+  } else {
+    const hours = beautifyNumber(Math.floor(seconds / 3600))
+    const remainingMinutes = beautifyNumber(Math.floor((seconds % 3600) / 60))
+    const remainingSeconds = beautifyNumber(seconds % 60)
+
+    return `${hours}:${remainingMinutes}:${remainingSeconds}`
+  }
 }
 
-export interface PopupMessages {
-  errorMessage: string
-  loadingMessage: string
-  nearestSegmentMessage?: string
-  noMutedSegmentsMessage: string
-  passedAllSegmentsMessage: string
+export const messages: PopupMessages = {
+  errorMessage: "Something went wrong. Try refreshing the page.",
+  noMutedSegmentsMessage: "Didn't detect any muted segments in this VOD.",
+  nearestSegmentMessage: `Muted segment at ${formatCurrentTime(21197.118775)}`,
+  passedAllSegmentsMessage: "No muted segments remaining in this VOD.",
+  loadingMessage: "Loading muted segment data...",
 }
 
 export default () => {
@@ -21,44 +64,6 @@ export default () => {
   const [manualSkip, setManualSkip] = useState(false)
   const [mutedSegments, setMutedSegments] = useState([])
   const [nearestSegment, setNearestSegment] = useState({})
-
-  const messages: PopupMessages = {
-    errorMessage: "Something went wrong. Try refreshing the page.",
-    noMutedSegmentsMessage: "Didn't detect any muted segments in this VOD.",
-    nearestSegmentMessage: `Muted segment at ${formatCurrentTime(
-      21197.118775,
-    )}`,
-    passedAllSegmentsMessage: "No muted segments remaining in this VOD.",
-    loadingMessage: "Loading muted segment data...",
-  }
-
-  function formatCurrentTime(seconds: number) {
-    if (isNaN(seconds)) {
-      return ""
-    }
-
-    function beautifyNumber(time: number) {
-      return time > 10
-        ? Math.floor(time).toString()
-        : Math.floor(time).toString().padStart(2, "0")
-    }
-
-    const currTime = Number(beautifyNumber(seconds))
-
-    if (currTime < 60) {
-      return currTime.toString()
-    } else if (seconds < 3600) {
-      const minutes = beautifyNumber(Math.floor(seconds / 60))
-      const remainingSeconds = beautifyNumber(seconds % 60)
-      return `${minutes}:${remainingSeconds}.`
-    } else {
-      const hours = beautifyNumber(Math.floor(seconds / 3600))
-      const remainingMinutes = beautifyNumber(Math.floor((seconds % 3600) / 60))
-      const remainingSeconds = beautifyNumber(seconds % 60)
-
-      return `${hours}:${remainingMinutes}:${remainingSeconds}`
-    }
-  }
 
   const ToggleSwitchWithLabel = (props: SwitchProps) => {
     return (
@@ -92,7 +97,7 @@ export default () => {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 shadow-sm bg-black bg-opacity-100 p-4 w-96">
+    <div className="flex flex-col gap-4 p-4 shadow-sm bg-black bg-opacity-100 w-96">
       <h1>VODSkipper</h1>
       <div className="border border-solid border-gray-700"></div>
       <div>
@@ -101,6 +106,8 @@ export default () => {
           switchDescription={
             "Check to be prompted before skipping a muted section."
           }
+          manualSkip={manualSkip}
+          setManualSkip={setManualSkip}
         />
       </div>
 
