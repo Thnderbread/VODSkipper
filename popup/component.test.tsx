@@ -9,12 +9,12 @@ describe("Popup Component Tests", () => {
   it("should be able to fetch cat facts", async () => {
     render(<Component />)
     await expect($("h1")).toHaveText("VODSkipper")
-
-    // const getCatFactBtn = await $('aria/Get a Cat Fact!')Ks
-    // await getCatFactBtn.click()
-
-    // await getCatFactBtn.waitForEnabled()
-    // await expect($('p')).toHaveText('Some funny cat fact!') // WebdriverIO matcher (async)
-    // expect(browser.runtime.sendMessage).toHaveBeenCalledWith({ action: 'fetch' }) // Jest matcher (sync)
   })
 })
+
+// const getCatFactBtn = await $('aria/Get a Cat Fact!')Ks
+// await getCatFactBtn.click()
+
+// await getCatFactBtn.waitForEnabled()
+// await expect($('p')).toHaveText('Some funny cat fact!') // WebdriverIO matcher (async)
+// expect(browser.runtime.sendMessage).toHaveBeenCalledWith({ action: 'fetch' }) // Jest matcher (sync)

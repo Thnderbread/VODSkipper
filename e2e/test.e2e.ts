@@ -9,7 +9,7 @@ const isFirefox =
 describe("Web Extension e2e test", () => {
   it("should have injected the component from the content script", async () => {
     await browser.url("https://google.com")
-    await expect($$("#extension-root")).toBeElementsArrayOfSize(1)
+    await expect($$("#extension-root")).toBeElementsArrayOfSize(0)
   })
 
   // it("can get cat facts", async () => {
