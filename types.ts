@@ -37,6 +37,7 @@ export type MutedVodSegment = {
   duration: number
   endingOffset: number
   startingOffset: number
+  readableOffset?: string
 }
 
 export type DefaultVodSegment = {
@@ -44,14 +45,16 @@ export type DefaultVodSegment = {
 } & MutedVodSegment
 
 export interface State {
-  defaultSkipMethod: SkipMethod
+  enabled: boolean
+  skipped: boolean
   nearestSegment: MutedVodSegment
   mutedSegments: MutedVodSegment[]
   prevMutedSegment: MutedVodSegment
 }
 
 export type Action =
-  | { type: "SET_SKIP_METHOD"; payload: SkipMethod }
+  | { type: "SET_ENABLED"; payload: boolean }
+  | { type: "SET_SKIPPED"; payload: boolean }
   | { type: "SET_NEAREST"; payload: MutedVodSegment }
   | { type: "SET_MUTED_SEGMENTS"; payload: MutedVodSegment[] }
   | { type: "SET_PREV_MUTED_SEGMENT"; payload: MutedVodSegment }
