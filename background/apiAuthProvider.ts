@@ -1,5 +1,6 @@
 import { config } from "dotenv"
 import { MutedVodSegment } from "../types"
+import formatCurrentTime from "./utils/formatTime"
 import { ApiClient, HelixVideo } from "@twurple/api/lib"
 import { RefreshingAuthProvider } from "@twurple/auth/lib"
 import { TwurpleError, isTwurpleError } from "./TwurpleError"
@@ -53,6 +54,7 @@ function formatMutedSegmentsData(
         duration: segment.duration,
         startingOffset: segment.offset,
         endingOffset: segment.offset + segment.duration,
+        readableOffset: formatCurrentTime(segment.offset),
       }
       return formattedSegment
     })
@@ -71,7 +73,7 @@ function formatMutedSegmentsData(
  */
 export async function getMutedVodSegmentsFromTwitch(
   vodID: string,
-): Promise<MutedVodSegment[] | string | undefined> {
+): Promise<MutedSegmentResponse> {
   console.debug(`Fetching muted segments for ${vodID}`)
 
   let vod: HelixVideo | null
@@ -80,13 +82,18 @@ export async function getMutedVodSegmentsFromTwitch(
   try {
     vod = await apiClient.videos.getVideoById(vodID)
     mutedSegments = vod?.mutedSegmentData
+
+    return mutedSegments
+      ? [formatMutedSegmentsData(mutedSegments), ""]
+      : [undefined, "data not found"]
   } catch (error: unknown) {
     if (isTwurpleError(error)) {
       const errorObj: TwurpleError = JSON.parse(error.body)
       if (errorObj.status === 404) {
-        return undefined
+        return [undefined, "data not found."]
       } else if (errorObj.status === 401) {
-        return "Token Expired."
+        // ? throw an error here?
+        return [undefined, new Error("Token Expired.")]
       }
       console.error(`Twurple Error: ${error.body}`)
     } else {
@@ -94,4 +101,10 @@ export async function getMutedVodSegmentsFromTwitch(
       throw error
     }
   }
+  return [undefined, "data not found"]
 }
+
+type FailureInfo = string | Error
+type SegmentData = MutedVodSegment[] | undefined
+
+type MutedSegmentResponse = [SegmentData, FailureInfo]
