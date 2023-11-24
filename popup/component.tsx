@@ -2,99 +2,61 @@ import clsx from "clsx"
 import React, { useState } from "react"
 import browser from "webextension-polyfill"
 import { PopupMessages, SwitchProps } from "../common/stuff"
+import { ToggleSwitchWithLabel } from "../common/ToggleSwitch"
 
 /**
- * Shows the given time in a friendlier HH:mm:ss format.
+ * Just displays shit. Obtain data from session storage
+ * for showing numbers and stuff.
  *
- * @param seconds The current time in seconds to format.
- * @returns A HH:mm:ss string based on the given seconds value.
+ * Listen for new times from content script.
  */
-function formatCurrentTime(seconds: number): string {
-  if (isNaN(seconds)) {
-    return ""
-  }
 
-  /**
-   * Creates a string for the given number.
-   * Adds a 0 in front of the given number if
-   * necessary.
-   *
-   * @param time The number to beautify.
-   * @returns The number as a string.
-   */
-  function beautifyNumber(time: number): string {
-    return time > 10
-      ? Math.floor(time).toString()
-      : Math.floor(time).toString().padStart(2, "0")
-  }
+// export const messages: PopupMessages = {
+//   errorMessage: "Something went wrong. Try refreshing the page.",
+//   noMutedSegmentsMessage: "Didn't detect any muted segments in this VOD.",
+//   nearestSegmentMessage: `Muted segment at ${formatCurrentTime(21197.118775)}`,
+//   passedAllSegmentsMessage: "No muted segments remaining in this VOD.",
+//   loadingMessage: "Loading muted segment data...",
+// }
 
-  /**
-   * Format the number. If the current time is under 60s,
-   * pass it to beautifyNumber and return it.
-   *
-   * Otherwise - calculate the needed values (HH, mm, ss),
-   * construct a string based off of them, and return that.
-   */
-  if (seconds < 60) {
-    return beautifyNumber(seconds)
-  } else if (seconds < 3600) {
-    const minutes = beautifyNumber(Math.floor(seconds / 60))
-    const remainingSeconds = beautifyNumber(seconds % 60)
-    return `${minutes}:${remainingSeconds}.`
-  } else {
-    const hours = beautifyNumber(Math.floor(seconds / 3600))
-    const remainingMinutes = beautifyNumber(Math.floor((seconds % 3600) / 60))
-    const remainingSeconds = beautifyNumber(seconds % 60)
-
-    return `${hours}:${remainingMinutes}:${remainingSeconds}`
-  }
-}
-
-export const messages: PopupMessages = {
-  errorMessage: "Something went wrong. Try refreshing the page.",
-  noMutedSegmentsMessage: "Didn't detect any muted segments in this VOD.",
-  nearestSegmentMessage: `Muted segment at ${formatCurrentTime(21197.118775)}`,
-  passedAllSegmentsMessage: "No muted segments remaining in this VOD.",
-  loadingMessage: "Loading muted segment data...",
-}
+// TODO: Send a message when enabled is toggled.
+// TODO: Should cancel everything on content-script side.
+type ResponseCallback = <T>(data: T) => void
 
 export default () => {
   const [fact, setFact] = useState("Click the button to fetch a fact!")
+  const [enabled, setEnabled] = useState(true)
   const [loading, setLoading] = useState(false)
-  const [manualSkip, setManualSkip] = useState(false)
   const [mutedSegments, setMutedSegments] = useState([])
   const [nearestSegment, setNearestSegment] = useState({})
 
-  const ToggleSwitchWithLabel = (props: SwitchProps) => {
-    return (
-      <div className={clsx("flex items-center justify-between")}>
-        <div className="mr-4 mb-2">
-          <label className={clsx("text-lg text-white dark:text-gray-400")}>
-            {props.switchTitle}
-          </label>
-          <p className={clsx("text-gray-500", "text-left")}>
-            {props.switchDescription}
-          </p>
-        </div>
-        <input
-          type="checkbox"
-          checked={manualSkip}
-          onChange={() => setManualSkip(!manualSkip)}
-          className={clsx(
-            "relative",
-            "shrink-0",
-            "rounded-md",
-            "w-4",
-            "h-5",
-            "p-3",
-            "bg-gray-600",
-            "border-gray-400",
-            "text-blue-950",
-          )}
-        />
-      </div>
-    )
-  }
+  const [errorMessage, setErrorMessage] = useState("")
+  const [displayMessage, setDisplayMessage] = useState("")
+  const [nearestSegmentStart, setNearestSegmentStart] = useState(0)
+
+  browser.runtime.onMessage.addListener(
+    (message, sender, response: ResponseCallback) => {
+      if (message.action === "update") {
+        if (message.data === "Bad token.") {
+          setErrorMessage(message.data)
+          response(true)
+        } else if (
+          message.data === "No muted segment data found for this vod."
+        ) {
+          setDisplayMessage(message.data)
+          response(true)
+        } else if (typeof message.data === "number") {
+          setNearestSegmentStart(message.data)
+          setDisplayMessage(`Next muted segment at ${nearestSegmentStart}`)
+          response(true)
+        } else {
+          console.error("Idk wtf goin on: ", message.data)
+          response({ data: true })
+        }
+        return true
+      }
+    },
+  )
 
   return (
     <div className="flex flex-col gap-4 p-4 shadow-sm bg-black bg-opacity-100 w-96">
@@ -102,12 +64,12 @@ export default () => {
       <div className="border border-solid border-gray-700"></div>
       <div>
         <ToggleSwitchWithLabel
-          switchTitle={"Prompt Me Before Skipping"}
+          switchTitle={"Enabled"}
           switchDescription={
-            "Check to be prompted before skipping a muted section."
+            "Uncheck to disable. Keeps the page from refreshing."
           }
-          manualSkip={manualSkip}
-          setManualSkip={setManualSkip}
+          enabled={enabled}
+          setEnabled={() => setEnabled(!enabled)}
         />
       </div>
 
@@ -117,7 +79,7 @@ export default () => {
         hidden={false}
         className="text-center justify-center text-lg text-white mb-10"
       >
-        {messages.passedAllSegmentsMessage}
+        {"This is where messages will be displayed!"}
       </div>
     </div>
   )
