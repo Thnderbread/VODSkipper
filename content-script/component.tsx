@@ -1,18 +1,28 @@
-import React, { useState, useEffect, useReducer } from "react"
 import browser from "webextension-polyfill"
-import { SkipMethod, MutedVodSegment, State, Action } from "../types"
+// import { messages } from "../popup/component"
 import { ToggleSwitchWithLabel } from "../common/ToggleSwitch"
-import { messages } from "../popup/component"
+import React, { useState, useEffect, useReducer } from "react"
+import { findInterval, handleSeek, performSkip } from "../functions"
+import { SkipMethod, MutedVodSegment, State, Action } from "../types"
 
-const DEFAULTSEGMENT = {
+/**
+ * Add a listener for when the enabled state is toggled?
+ */
+/**
+ * Default segment. Signals that there are
+ * no more muted segments found.
+ */
+export const DEFAULTSEGMENT = {
   startingOffset: 0,
   endingOffset: 0,
   duration: 0,
+  default: true,
 }
 
 // const EXPIRES_IN = 259_000_000
 const initialState: State = {
-  defaultSkipMethod: "auto",
+  enabled: true,
+  skipped: false,
   mutedSegments: [],
   nearestSegment: DEFAULTSEGMENT,
   prevMutedSegment: DEFAULTSEGMENT,
@@ -26,12 +36,93 @@ function reducer(state: State, action: Action) {
       return { ...state, mutedSegments: action.payload }
     case "SET_PREV_MUTED_SEGMENT":
       return { ...state, prevMutedSegment: action.payload }
-    case "SET_SKIP_METHOD":
-      return { ...state, defaultSkipMethod: action.payload }
+    case "SET_ENABLED":
+      return { ...state, enabled: action.payload }
+    case "SET_SKIPPED":
+      return { ...state, skipped: action.payload }
     default:
       return state
   }
 }
+
+;(async () => {
+  const video = document.querySelector("video")
+
+  const [state, dispatch] = useReducer(reducer, initialState)
+
+  if (video === null) {
+    console.error("Can't find the video element on the page.")
+    // ? message to popup script?
+    return
+  }
+
+  /**
+   * Capture vod id.
+   */
+  const vodID = document.location.pathname.split("/")[2]
+
+  /**
+   * Muted segment data for said vod.
+   * TODO: type this response thingy.
+   */
+  const response = await browser.runtime.sendMessage({
+    action: "getData",
+    data: vodID,
+  })
+
+  if (response.data instanceof Error) {
+    console.error("Bad token.")
+    // await browser.runtime.sendMessage({ action: "update", data: "Bad token." })
+    // ? send message to popup script?
+    return
+  } else if (response.data === undefined) {
+    console.log("No muted segment data found for this vod.")
+    // await browser.runtime.sendMessage({ action: "update", data: "No muted segment data found for this vod." })
+    return
+  }
+
+  /**
+   * Vod data is obtained at this point.
+   *
+   * listener = setInterval(skipFn, findInterval)
+   * skipFn will set a variable to let extension know when a seek event
+   *  - that comes from skipping was initiated internally.
+   * This way, if the user skips around, the extension will know its them,
+   *  - due to the absence of the skip variable.
+   * At this point, the listener can be cleared,
+   *  - and a new one can be created based on where the user is.
+   * The listener should also be cleared and recalculated on pause.
+   * How to have this happen forever though?
+   *
+   */
+
+  const listener = setInterval(
+    performSkip,
+    findInterval(state.nearestSegment.startingOffset, video.currentTime),
+  )
+
+  /**
+   * Probably cause issues, since onplaying will fire after
+   * a skip event.
+   * Should these be promises that get resolved before things
+   */
+  video.onplaying = () => listener
+  video.onseeked = () => handleSeek
+  video.onpause = () => clearInterval(listener)
+})()
+/**
+ * Content Script:
+ *
+ *  Initiate request to bg script.
+ *  Receive data and perform skips as necessary.
+ *
+ *  IIFE that:
+ *    - captures the video element
+ *    - gets the vod id
+ *    - requests data from bg script.
+ *    - Receives data. Performs skips based on it.
+ *    - When a skip is performed, send the new time to popup script.
+ */
 
 export default () => {
   const [fact, setFact] = useState("Click the button to fetch a fact!")
@@ -74,6 +165,7 @@ export default () => {
 
     const vodID = document.location.pathname.split("/")[2]
 
+    // ! Fix this. Change skip method to enabled / disabled.
     try {
       /**
        * Retrieve current settings. Looking for skip method
@@ -87,7 +179,7 @@ export default () => {
        * properties.
        */
       let settings = {
-        SkipMethod: userSettings?.settings?.SkipMethod || "auto",
+        enabled: userSettings?.settings?.enabled || true,
         vodData: userSettings?.settings?.vodData || {},
       } // initialize settings object
 
@@ -117,14 +209,14 @@ export default () => {
        * skipping through the vod.
        */
       // ? useReducer
-      dispatch({ type: "SET_SKIP_METHOD", payload: settings.SkipMethod })
+      dispatch({ type: "SET_ENABLED", payload: settings.enabled })
       dispatch({ type: "SET_MUTED_SEGMENTS", payload: settings.vodData[vodID] })
       // setDefaultSkipMethod(settings.SkipMethod)
       // setMutedSegments(settings.vodData[vodID])
 
       // TODO: Implement expiration? How? Session storage or manual cleanup check localStorage on each page load?
     } catch (error) {
-      // TODO: Send this to error handler or whatever (some centralized error handler - kabana?)
+      // TODO: Send this to error handler or whatever (some centralized error handler - kibana?)
       console.error(`Unable to fetch the skip data: ${error}`)
     }
   }
@@ -206,24 +298,7 @@ export default () => {
         video.currentTime >= state.nearestSegment.startingOffset &&
         video.currentTime < state.nearestSegment.endingOffset
       ) {
-        // check if the user tried to undo a skip
-        // TODO: if listening for an undo and a user goes somewhere else, what will happen?
-        if (state.defaultSkipMethod === "manual") {
-          browser.browserAction.onClicked.addListener(() => {
-            video.currentTime = state.nearestSegment.endingOffset
-            // ? useReducer
-            dispatch({
-              type: "SET_PREV_MUTED_SEGMENT",
-              payload: state.nearestSegment,
-            })
-            // setPrevMutedSegment(state.nearestSegment)
-            dispatch({
-              type: "SET_NEAREST",
-              payload: findNearestMutedSegment(state.mutedSegments),
-            })
-          })
-          // auto skip
-        } else {
+        if (state.enabled) {
           // ? useReducer
           video.currentTime = state.nearestSegment.endingOffset
           dispatch({
@@ -240,29 +315,32 @@ export default () => {
     }, INTERVAL)
   }
 
-  return (
-    <div className="flex flex-col gap-4 p-4 shadow-sm bg-black bg-opacity-100 p-4 w-96">
-      <h1>VODSkipper</h1>
-      <div className="border border-solid border-gray-700"></div>
-      <div>
-        <ToggleSwitchWithLabel
-          switchTitle={"Prompt Me Before Skipping"}
-          switchDescription={
-            "Check to be prompted before skipping a muted section."
-          }
-          manualSkip={state.defaultSkipMethod === "manual" ? true : false}
-          setManualSkip={(manualSkip: boolean) => !manualSkip}
-        />
-      </div>
+  // return (
+  //   <div className="flex flex-col gap-4 p-4 shadow-sm bg-black bg-opacity-100 p-4 w-96">
+  //     <h1>VODSkipper</h1>
+  //     <div className="border border-solid border-gray-700"></div>
+  //     <div>
+  //       <ToggleSwitchWithLabel
+  //         switchTitle={"Prompt Me Before Skipping"}
+  //         switchDescription={
+  //           "Check to be prompted before skipping a muted section."
+  //         }
+  //         enabled={state.enabled}
+  //         setEnabled={(enabled: boolean) => {
+  //           !enabled
+  //           dispatch({ type: "SET_ENABLED", payload: enabled })
+  //         }}
+  //       />
+  //     </div>
 
-      <div className="border border-solid border-gray-700"></div>
+  //     <div className="border border-solid border-gray-700"></div>
 
-      <div
-        hidden={false}
-        className="text-center justify-center text-lg text-white mb-10"
-      >
-        {messages.passedAllSegmentsMessage}
-      </div>
-    </div>
-  )
+  //     <div
+  //       hidden={false}
+  //       className="text-center justify-center text-lg text-white mb-10"
+  //     >
+  //       {messages.passedAllSegmentsMessage}
+  //     </div>
+  //   </div>
+  // )
 }
