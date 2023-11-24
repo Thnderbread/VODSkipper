@@ -1,8 +1,8 @@
 export interface SwitchProps {
-  switchTitle: string
   enabled: boolean
+  switchTitle: string
+  setEnabled: () => void
   switchDescription: string
-  setEnabled: (manualSkip: boolean) => void
 }
 
 export interface PopupMessages {
