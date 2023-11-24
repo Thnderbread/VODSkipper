@@ -1,8 +1,12 @@
+import { Browser } from "webextension-polyfill"
+import { DEFAULTSEGMENT } from "./content-script/component"
 import {
   FindNearestMutedSegmentFunction,
   ListenForMutedSegmentsFunction,
   FetchMutedSegmentsFunction,
   HandleSeekFunction,
+  State,
+  Action,
 } from "./types"
 
 /**
@@ -62,168 +66,275 @@ export const findNearestMutedSegment: FindNearestMutedSegmentFunction = (
  * is cleared on a user-initiated seek and not a seek that is the result of
  * a skip.
  */
-export const listenForMutedSegments: ListenForMutedSegmentsFunction = (
-  video,
-  browser,
-  DEFAULTSEGMENT,
-  state,
-  dispatch,
-) => {
-  dispatch({
-    type: "SET_NEAREST",
-    payload: findNearestMutedSegment(
-      video,
-      state.mutedSegments,
-      DEFAULTSEGMENT,
-    ),
-  })
-  // setNearestSegment(findNearestMutedSegment(mutedSegments))
+// export const listenForMutedSegments: ListenForMutedSegmentsFunction = (
+//   video,
+//   browser,
+//   DEFAULTSEGMENT,
+//   state,
+//   dispatch,
+// ) => {
+//   dispatch({
+//     type: "SET_NEAREST",
+//     payload: findNearestMutedSegment(
+//       video,
+//       state.mutedSegments,
+//       DEFAULTSEGMENT,
+//     ),
+//   })
+//   // setNearestSegment(findNearestMutedSegment(mutedSegments))
 
-  const DEFAULTINTERVAL = 1000
-  /**
-   * - Determine the interval for setInterval by getting the
-   *    - distance from the current time to the next startingOffset.
-   * - Verify the offset exists, and that the distance value is positive.
-   * - If there's no offset, nearestSegment is a default segment,
-   *    - meaning there are no more muted segments, and
-   *    - setInterval will return after DEFAULTINTERVAL's delay.
-   * - If the distance value is negative, we're already inside a
-   *    - mutedSegment. The skip will occur after DEFAULTINTERVAL's delay.
-   */
-  const INTERVAL = state.nearestSegment?.startingOffset
-    ? state.nearestSegment.startingOffset - video.currentTime > 0
-      ? state.nearestSegment.startingOffset - video.currentTime
-      : DEFAULTINTERVAL
-    : DEFAULTINTERVAL
+//   const DEFAULTINTERVAL = 1000
+//   /**
+//    * - Determine the interval for setInterval by getting the
+//    *    - distance from the current time to the next startingOffset.
+//    * - Verify the offset exists, and that the distance value is positive.
+//    * - If there's no offset, nearestSegment is a default segment,
+//    *    - meaning there are no more muted segments, and
+//    *    - setInterval will return after DEFAULTINTERVAL's delay.
+//    * - If the distance value is negative, we're already inside a
+//    *    - mutedSegment. The skip will occur after DEFAULTINTERVAL's delay.
+//    */
+//   const INTERVAL = state.nearestSegment?.startingOffset
+//     ? state.nearestSegment.startingOffset - video.currentTime > 0
+//       ? state.nearestSegment.startingOffset - video.currentTime
+//       : DEFAULTINTERVAL
+//     : DEFAULTINTERVAL
 
-  /**
-   * Check where we're at in the VOD.
-   * Perform skip if necessary.
-   */
-  return setInterval(() => {
-    // Check and see if the nearest segment is a default segment or not.
-    if (state.nearestSegment.hasOwnProperty("default")) {
-      return
-    }
+//   /**
+//    * Check where we're at in the VOD.
+//    * Perform skip if necessary.
+//    */
+//   return setInterval(() => {
+//     // Check and see if the nearest segment is a default segment or not.
+//     if (state.nearestSegment.hasOwnProperty("default")) {
+//       return
+//     }
 
-    /**
-     * To figure out if the user is in a muted VOD segment:
-     * Check check if the currentTime is >=
-     * the closest starting offset because of the dynamic interval -
-     * should always be in close proximity of a muted segment.
-     */
-    if (
-      video.currentTime >= state.nearestSegment.startingOffset &&
-      video.currentTime < state.nearestSegment.endingOffset
-    ) {
-      // listen for icon click before initiating manual skip
-      if (state.defaultSkipMethod === "manual") {
-        browser.browserAction.onClicked.addListener(() => {
-          video.currentTime = state.nearestSegment.endingOffset
-          // ? useReducer
-          dispatch({
-            type: "SET_PREV_MUTED_SEGMENT",
-            payload: state.nearestSegment,
-          })
-          dispatch({
-            type: "SET_NEAREST",
-            payload: findNearestMutedSegment(
-              video,
-              state.mutedSegments,
-              DEFAULTSEGMENT,
-            ),
-          })
-        })
-        // auto skip
-      } else {
-        // ? useReducer
-        video.currentTime = state.nearestSegment.endingOffset
-        dispatch({
-          type: "SET_PREV_MUTED_SEGMENT",
-          payload: state.nearestSegment,
-        })
-        dispatch({
-          type: "SET_NEAREST",
-          payload: findNearestMutedSegment(
-            video,
-            state.mutedSegments,
-            DEFAULTSEGMENT,
-          ),
-        })
-      }
-    }
-  }, INTERVAL)
-}
+//     /**
+//      * To figure out if the user is in a muted VOD segment:
+//      * Check check if the currentTime is >=
+//      * the closest starting offset because of the dynamic interval -
+//      * should always be in close proximity of a muted segment.
+//      */
+//     if (
+//       video.currentTime >= state.nearestSegment.startingOffset &&
+//       video.currentTime < state.nearestSegment.endingOffset
+//     ) {
+//       // listen for icon click before initiating manual skip
+//       if (state.defaultSkipMethod === "manual") {
+//         browser.browserAction.onClicked.addListener(() => {
+//           video.currentTime = state.nearestSegment.endingOffset
+//           // ? useReducer
+//           dispatch({
+//             type: "SET_PREV_MUTED_SEGMENT",
+//             payload: state.nearestSegment,
+//           })
+//           dispatch({
+//             type: "SET_NEAREST",
+//             payload: findNearestMutedSegment(
+//               video,
+//               state.mutedSegments,
+//               DEFAULTSEGMENT,
+//             ),
+//           })
+//         })
+//         // auto skip
+//       } else {
+//         // ? useReducer
+//         video.currentTime = state.nearestSegment.endingOffset
+//         dispatch({
+//           type: "SET_PREV_MUTED_SEGMENT",
+//           payload: state.nearestSegment,
+//         })
+//         dispatch({
+//           type: "SET_NEAREST",
+//           payload: findNearestMutedSegment(
+//             video,
+//             state.mutedSegments,
+//             DEFAULTSEGMENT,
+//           ),
+//         })
+//       }
+//     }
+//   }, INTERVAL)
+// }
 
 /**
  * Retrieve the muted segment data for this VOD. Look in
  * local storage, or contact Twitch API if necessary.
  */
-export const fetchMutedSegments: FetchMutedSegmentsFunction = async (
-  video,
-  browser,
-  dispatch,
-) => {
-  // Sanity check to make sure video element exists
-  if (!video) {
-    return
+// export const fetchMutedSegments: FetchMutedSegmentsFunction = async (
+//   video,
+//   browser,
+//   dispatch,
+// ) => {
+//   // Sanity check to make sure video element exists
+//   if (!video) {
+//     return
+//   }
+
+//   const vodID = document.location.pathname.split("/")[2]
+
+//   try {
+//     /**
+//      * Retrieve current settings. Looking for skip method
+//      * as well as skip data for the current vod.
+//      */
+//     const userSettings = JSON.parse(localStorage.getItem("vodskipper") ?? "")
+
+//     /**
+//      * Create a dummy settings object. Using this as a template to
+//      * either add newly retrieved data, or to easily handle nonexistent
+//      * properties.
+//      */
+//     let settings = {
+//       SkipMethod: userSettings?.settings?.SkipMethod || "auto",
+//       vodData: userSettings?.settings?.vodData || {},
+//     } // initialize settings object
+
+//     /**
+//      * If there is no data for this vod, retrieve it using the bg script.
+//      * Add the new skip data to the settings object. Update localStorage
+//      * with the new settings.
+//      */
+//     if (userSettings?.settings?.vodData[vodID] === undefined) {
+//       const data = await browser.runtime.sendMessage({ vodID })
+
+//       if (data instanceof Error) {
+//         console.error(data)
+//         return
+//       }
+
+//       settings.vodData[vodID] = {
+//         mutedSegments: data,
+//         // exp: Date.now() + EXPIRES_IN
+//       }
+
+//       localStorage.setItem("vodskipper", JSON.stringify(settings))
+//     }
+
+//     /**
+//      * Set skip data and skip method that will be used when actually
+//      * skipping through the vod.
+//      */
+//     // ? useReducer
+//     dispatch({ type: "SET_SKIP_METHOD", payload: settings.SkipMethod })
+//     dispatch({ type: "SET_MUTED_SEGMENTS", payload: settings.vodData[vodID] })
+//     // setDefaultSkipMethod(settings.SkipMethod)
+//     // setMutedSegments(settings.vodData[vodID])
+
+//     // TODO: Implement expiration? How? Session storage or manual cleanup check localStorage on each page load?
+//   } catch (error) {
+//     // TODO: Send this to error handler or whatever (some centralized error handler - kabana?)
+//     console.error(`Unable to fetch the skip data: ${error}`)
+//   }
+// }
+
+/**
+ * Generates an interval based on
+ * the video's current time (endingOffset)
+ * and its distance to the start of the nearest
+ * muted segment (endingOffset). Used to determine
+ * When the skip function should run.
+ *
+ * @param startingOffset The current time in seconds.
+ * @param endingOffset The time in seconds when the skip
+ * function should trigger.
+ * @returns The calculated interval in ms, or a default
+ * value of 1000 if the calculated interval was negative.
+ */
+export function findInterval(startingOffset: number, endingOffset: number) {
+  const DEFAULTINTERVAL = 1000
+
+  if (startingOffset !== undefined && startingOffset - endingOffset > 0) {
+    return startingOffset - endingOffset
+  }
+  return DEFAULTINTERVAL
+}
+
+export function performSkip(
+  state: State,
+  dispatch: React.Dispatch<Action>,
+  video: HTMLVideoElement,
+) {
+  if (state.nearestSegment === undefined) {
+    return // ? include message?
   }
 
-  const vodID = document.location.pathname.split("/")[2]
-
-  try {
-    /**
-     * Retrieve current settings. Looking for skip method
-     * as well as skip data for the current vod.
-     */
-    const userSettings = JSON.parse(localStorage.getItem("vodskipper") ?? "")
-
-    /**
-     * Create a dummy settings object. Using this as a template to
-     * either add newly retrieved data, or to easily handle nonexistent
-     * properties.
-     */
-    let settings = {
-      SkipMethod: userSettings?.settings?.SkipMethod || "auto",
-      vodData: userSettings?.settings?.vodData || {},
-    } // initialize settings object
+  /**
+   * Should always be inside of a muted segment because
+   * of the calculated interval.
+   */
+  if (
+    video.currentTime >= state.nearestSegment.startingOffset &&
+    video.currentTime < state.nearestSegment.endingOffset
+  ) {
+    // update the current time (perform skip)
+    video.currentTime = state.nearestSegment.endingOffset
 
     /**
-     * If there is no data for this vod, retrieve it using the bg script.
-     * Add the new skip data to the settings object. Update localStorage
-     * with the new settings.
+     * set previous segment to be the one that was just
+     * passed. In case of undo implementation.
      */
-    if (userSettings?.settings?.vodData[vodID] === undefined) {
-      const data = await browser.runtime.sendMessage({ vodID })
-
-      if (data instanceof Error) {
-        console.error(data)
-        return
-      }
-
-      settings.vodData[vodID] = {
-        mutedSegments: data,
-        // exp: Date.now() + EXPIRES_IN
-      }
-
-      localStorage.setItem("vodskipper", JSON.stringify(settings))
-    }
+    dispatch({
+      type: "SET_PREV_MUTED_SEGMENT",
+      payload: state.nearestSegment,
+    })
 
     /**
-     * Set skip data and skip method that will be used when actually
-     * skipping through the vod.
+     * Find the next nearest muted segment.
      */
-    // ? useReducer
-    dispatch({ type: "SET_SKIP_METHOD", payload: settings.SkipMethod })
-    dispatch({ type: "SET_MUTED_SEGMENTS", payload: settings.vodData[vodID] })
-    // setDefaultSkipMethod(settings.SkipMethod)
-    // setMutedSegments(settings.vodData[vodID])
+    dispatch({
+      type: "SET_NEAREST",
+      payload: findNearestMutedSegment(
+        video,
+        state.mutedSegments,
+        DEFAULTSEGMENT,
+      ),
+    })
 
-    // TODO: Implement expiration? How? Session storage or manual cleanup check localStorage on each page load?
-  } catch (error) {
-    // TODO: Send this to error handler or whatever (some centralized error handler - kabana?)
-    console.error(`Unable to fetch the skip data: ${error}`)
+    /**
+     * For ensure application knows a skip was
+     * initiated. Probably employ a useEffect
+     * that will reset this variable to false,
+     * clear the old listener, and generate a new one.
+     */
+    dispatch({ type: "SET_SKIPPED", payload: true })
   }
+}
+
+// Maybe employ a queue for handling seeks?
+// This way if the script skips ahead, and then
+// the user skips right after, everything is processed
+// at a pace.
+/**
+ * Handle the seek event based on whether the user skipped
+ * or whether script skipped.
+ *
+ * @param state
+ * @param dispatch
+ * @param browser
+ */
+export async function handleSeek(
+  state: State,
+  dispatch: React.Dispatch<Action>,
+  browser: Browser,
+) {
+  if (state.skipped) {
+    /**
+     * If the seeked event was fired because of
+     * the script, send a message to the popup
+     * script to update the time. Set the skipped
+     * state to false.
+     */
+    await browser.runtime.sendMessage({
+      action: "update",
+      data: state.nearestSegment.startingOffset,
+    })
+
+    dispatch({ type: "SET_SKIPPED", payload: false })
+  }
+  return
 }
 
 // export const main = (video: HTMLVideoElement) => {
