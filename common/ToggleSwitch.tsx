@@ -15,8 +15,8 @@ export const ToggleSwitchWithLabel = (props: SwitchProps) => {
       </div>
       <input
         type="checkbox"
-        checked={props.manualSkip}
-        onChange={() => props.setManualSkip(!props.manualSkip)}
+        checked={props.enabled}
+        onChange={props.setEnabled}
         className={clsx(
           "relative",
           "shrink-0",
