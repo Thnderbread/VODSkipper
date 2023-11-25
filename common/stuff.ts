@@ -12,3 +12,9 @@ export interface PopupMessages {
   noMutedSegmentsMessage: string
   passedAllSegmentsMessage: string
 }
+
+/**
+ * - Need to add types for stuff (TODO)
+ * - Double check implementations of stuff in content script
+ * - Honestly, just test it out real time and see what happens.
+ */

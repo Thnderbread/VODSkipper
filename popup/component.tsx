@@ -19,7 +19,7 @@ import { ToggleSwitchWithLabel } from "../common/ToggleSwitch"
 //   loadingMessage: "Loading muted segment data...",
 // }
 
-// TODO: Send a message when enabled is toggled.
+// TODO: [✅] Send a message when enabled is toggled.
 // TODO: Should cancel everything on content-script side.
 type ResponseCallback = <T>(data: T) => void
 
@@ -36,19 +36,19 @@ export default () => {
 
   browser.runtime.onMessage.addListener(
     (message, sender, response: ResponseCallback) => {
-      if (message.action === "update") {
+      if (message.action === "updateTime") {
         if (message.data === "Bad token.") {
           setErrorMessage(message.data)
-          response(true)
+          response({ data: true })
         } else if (
           message.data === "No muted segment data found for this vod."
         ) {
           setDisplayMessage(message.data)
-          response(true)
+          response({ data: true })
         } else if (typeof message.data === "number") {
           setNearestSegmentStart(message.data)
           setDisplayMessage(`Next muted segment at ${nearestSegmentStart}`)
-          response(true)
+          response({ data: true })
         } else {
           console.error("Idk wtf goin on: ", message.data)
           response({ data: true })
@@ -57,6 +57,11 @@ export default () => {
       }
     },
   )
+
+  async function handleToggle(enabled: boolean) {
+    await browser.runtime.sendMessage({ action: "setEnabled", data: !enabled })
+    setEnabled(!enabled)
+  }
 
   return (
     <div className="flex flex-col gap-4 p-4 shadow-sm bg-black bg-opacity-100 w-96">
@@ -69,7 +74,7 @@ export default () => {
             "Uncheck to disable. Keeps the page from refreshing."
           }
           enabled={enabled}
-          setEnabled={() => setEnabled(!enabled)}
+          setEnabled={() => handleToggle(enabled)}
         />
       </div>
 

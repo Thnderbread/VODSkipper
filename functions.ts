@@ -245,8 +245,9 @@ export const findNearestMutedSegment: FindNearestMutedSegmentFunction = (
  */
 export function findInterval(startingOffset: number, endingOffset: number) {
   const DEFAULTINTERVAL = 1000
+  const difference = startingOffset - endingOffset
 
-  if (startingOffset !== undefined && startingOffset - endingOffset > 0) {
+  if (startingOffset !== undefined && difference > 0 && !isNaN(difference)) {
     return startingOffset - endingOffset
   }
   return DEFAULTINTERVAL
@@ -328,13 +329,35 @@ export async function handleSeek(
      * state to false.
      */
     await browser.runtime.sendMessage({
-      action: "update",
+      action: "updateTime",
       data: state.nearestSegment.startingOffset,
     })
 
     dispatch({ type: "SET_SKIPPED", payload: false })
   }
   return
+}
+
+/**
+ * Creates a new listener for skipping.
+ * Sets the listener in reducer state via dispatch.
+ *
+ * @param state The current state via useReducer.
+ * @param video HTML video element to operate on.
+ * @param dispatch Dispatch function for updating the listener.
+ */
+export function createListener(
+  state: State,
+  video: HTMLVideoElement,
+  dispatch: React.Dispatch<Action>,
+): void {
+  const listener = setInterval(() => {
+    if (state.nearestSegment?.startingOffset === undefined) {
+      return undefined
+    }
+    performSkip(state, dispatch, video)
+  }, findInterval(state.nearestSegment.startingOffset, video.currentTime))
+  dispatch({ type: "SET_LISTENER", payload: listener })
 }
 
 // export const main = (video: HTMLVideoElement) => {

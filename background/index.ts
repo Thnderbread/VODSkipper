@@ -1,6 +1,11 @@
 import browser from "webextension-polyfill"
-import { retrieveFromStorage } from "./utils/storageHandler"
+import {
+  LocalStorageSettings,
+  retrieveFromStorage,
+  setInStorage,
+} from "./utils/storageHandler"
 import { getMutedVodSegmentsFromTwitch } from "./apiAuthProvider"
+import { MutedVodSegment } from "../types"
 
 /**
  * Properly set up content script to receive bg script data.
@@ -26,12 +31,23 @@ async function handleMessage(
 
     /**
      * If extension is disabled, just return.
-     *
-     * TODO: "existing" should be typed as having vodskipper prop.
-     * TODO: vodskipper should be typed as having enabled (bool) prop. Maybe other settings as well (vod skip data)
      */
     if (existing?.vodskipper?.enabled === false) {
       response({ data: null })
+      return
+      // ? Can this ever happen? Maybe if site data is cleared or
+      // ? shit's manually deleted?
+    } else if (existing?.vodskipper.enabled === undefined) {
+      const vodskipperSettings: LocalStorageSettings = {
+        vodskipper: {
+          enabled: true,
+        },
+      }
+      await setInStorage(vodskipperSettings)
+    }
+
+    if (typeof data !== "string") {
+      response({ data: "Invalid value supplied" })
       return
     }
 
@@ -44,12 +60,36 @@ async function handleMessage(
     } else if (error instanceof Error) {
       response({ data: error })
     }
+  } else if (action === "setEnabled") {
+    if (typeof data !== "boolean") {
+      response({ data: "Invalid value given." })
+      return
+    }
+    const vodskipperSettings: LocalStorageSettings = {
+      vodskipper: {
+        enabled: data,
+      },
+    }
+    await setInStorage(vodskipperSettings)
+    response({ data: "Preferences updated." })
+    return
   }
 }
 
+export interface BackgroundScriptResponse {
+  data: MutedVodSegment[] | undefined | Error
+}
+
+// @ts-ignore
+browser.runtime.onMessage.addListener((msg, sender, response) => {
+  handleMessage(msg, response)
+  return true
+})
+
 type Message = {
-  action: "getData" | "update" | "setEnabled"
-  data: string
+  action: "getData" | "updateTime" | "setEnabled"
+  // string represents vodId, boolean represents enabled status, number represents update time
+  data: string | boolean
 }
 
 type ResponseCallback = <T>(data: T) => void
@@ -76,9 +116,3 @@ type ResponseCallback = <T>(data: T) => void
 //     response({ data: null, error: "Unknown action" })
 //   }
 // }
-
-// @ts-ignore
-browser.runtime.onMessage.addListener((msg, sender, response) => {
-  handleMessage(msg, response)
-  return true
-})

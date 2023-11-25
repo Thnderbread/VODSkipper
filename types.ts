@@ -47,12 +47,14 @@ export type DefaultVodSegment = {
 export interface State {
   enabled: boolean
   skipped: boolean
+  listener: NodeJS.Timeout | undefined
   nearestSegment: MutedVodSegment
   mutedSegments: MutedVodSegment[]
   prevMutedSegment: MutedVodSegment
 }
 
 export type Action =
+  | { type: "SET_LISTENER"; payload: NodeJS.Timeout }
   | { type: "SET_ENABLED"; payload: boolean }
   | { type: "SET_SKIPPED"; payload: boolean }
   | { type: "SET_NEAREST"; payload: MutedVodSegment }
