@@ -3,6 +3,11 @@ import React, { useState } from "react"
 import browser from "webextension-polyfill"
 import { PopupMessages, SwitchProps } from "../common/stuff"
 import { ToggleSwitchWithLabel } from "../common/ToggleSwitch"
+import {
+  ContentScriptResponse,
+  SetEnabledResponse,
+  UpdateTimeMessage,
+} from "../types"
 
 /**
  * Just displays shit. Obtain data from session storage
@@ -35,32 +40,83 @@ export default () => {
   const [nearestSegmentStart, setNearestSegmentStart] = useState(0)
 
   browser.runtime.onMessage.addListener(
-    (message, sender, response: ResponseCallback) => {
-      if (message.action === "updateTime") {
-        if (message.data === "Bad token.") {
-          setErrorMessage(message.data)
-          response({ data: true })
-        } else if (
-          message.data === "No muted segment data found for this vod."
-        ) {
-          setDisplayMessage(message.data)
-          response({ data: true })
-        } else if (typeof message.data === "number") {
-          setNearestSegmentStart(message.data)
+    (
+      { action, data }: UpdateTimeMessage,
+      sender,
+      response: ResponseCallback,
+    ) => {
+      if (action === "updateTime") {
+        // ! Remove this
+        console.log(
+          `Received bg message to update time to: ${data} from ${nearestSegmentStart}`,
+        )
+        try {
+          setNearestSegmentStart(data)
           setDisplayMessage(`Next muted segment at ${nearestSegmentStart}`)
           response({ data: true })
-        } else {
-          console.error("Idk wtf goin on: ", message.data)
-          response({ data: true })
+        } catch (error) {
+          console.error("Idk wtf goin on: ", error)
+        } finally {
+          return true
         }
-        return true
       }
     },
   )
 
-  async function handleToggle(enabled: boolean) {
-    await browser.runtime.sendMessage({ action: "setEnabled", data: !enabled })
-    setEnabled(!enabled)
+  // TODO: Only send setEnabled message if enabled is being changed to false
+  // TODO: Send second setEnabled message to BG script.
+  async function handleToggle(): Promise<void> {
+    // ! Remove this
+    console.log("attempting to send a message to the content script...")
+    try {
+      const tabs = await browser.tabs.query({
+        active: true,
+        lastFocusedWindow: true,
+      })
+      const currentTab: browser.Tabs.Tab = tabs[0]
+
+      if (currentTab && currentTab.id) {
+        const csResponse: SetEnabledResponse = await browser.tabs.sendMessage(
+          currentTab.id,
+          {
+            action: "setEnabled",
+            data: enabled,
+          },
+        )
+        // ! Remove this
+        console.log(
+          `CS Response type: ${typeof csResponse} | csResponse message: ${csResponse} | stringify: ${JSON.stringify(
+            csResponse,
+          )}`,
+        )
+      } else {
+        // ! Remove this
+        console.error(
+          `Either no tab: ${currentTab} or no id: ${
+            currentTab?.id ?? "no id shruge"
+          }. Here's the tabs array: ${tabs}\n`,
+        )
+      }
+
+      // ! Remove this
+      console.log("Attempting to send message to bg script...")
+      const bgResponse: SetEnabledResponse = await browser.runtime.sendMessage({
+        action: "setEnabled",
+        data: enabled,
+      })
+      // ! Remove this
+      console.log(
+        `BG Response type: ${typeof bgResponse} | bgResponse message: ${bgResponse} | stringify: ${JSON.stringify(
+          bgResponse,
+        )}`,
+      )
+    } catch (error) {
+      console.error(`Failed: ${error}`)
+    } finally {
+      // ! Remove this
+      console.log(`Changing enabled state to ${!enabled}.`)
+      setEnabled(!enabled)
+    }
   }
 
   return (
@@ -74,7 +130,7 @@ export default () => {
             "Uncheck to disable. Keeps the page from refreshing."
           }
           enabled={enabled}
-          setEnabled={() => handleToggle(enabled)}
+          setEnabled={handleToggle}
         />
       </div>
 
