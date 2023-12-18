@@ -1,22 +1,23 @@
+import reducer from "./reducer"
 import browser from "webextension-polyfill"
 // import { messages } from "../popup/component"
 import { ToggleSwitchWithLabel } from "../common/ToggleSwitch"
-import React, { useState, useEffect, useReducer } from "react"
+import React, { useState, useEffect, useReducer, useRef } from "react"
 import {
   createListener,
   handleSeek,
   findNearestMutedSegment,
+  performSkip,
+  fetchDataFromBGScript,
 } from "../functions"
 import {
   MutedVodSegment,
   State,
-  Action,
   PopupMessage,
   GetDataResponse,
   NewListenerCodes,
   ResponseCallback,
 } from "../types"
-// import { BackgroundScriptResponse } from "../background"
 
 /**
  * Default segment. Signals that there are
@@ -29,108 +30,36 @@ export const DEFAULTSEGMENT = {
   default: true,
 }
 
-// const EXPIRES_IN = 259_000_000 - for storage
 const initialState: State = {
   error: "",
   enabled: true,
   skipped: false,
   mutedSegments: [],
   listener: undefined,
+  spareListener: undefined,
   nearestSegment: DEFAULTSEGMENT,
   prevMutedSegment: DEFAULTSEGMENT,
 }
 
-function reducer(state: State, action: Action) {
-  switch (action.type) {
-    case "SET_NEAREST":
-      return { ...state, nearestSegment: action.payload }
-    case "SET_MUTED_SEGMENTS":
-      return { ...state, mutedSegments: action.payload }
-    case "SET_PREV_MUTED_SEGMENT":
-      return { ...state, prevMutedSegment: action.payload }
-    case "SET_ENABLED":
-      return { ...state, enabled: action.payload }
-    case "SET_SKIPPED":
-      return { ...state, skipped: action.payload }
-    case "SET_LISTENER":
-      console.log(
-        `In reducer, changing listener from ${JSON.stringify(
-          state.listener,
-        )} to ${JSON.stringify(action.payload)}`,
-      )
-      return { ...state, listener: action.payload }
-    case "SET_ERROR":
-      return { ...state, backgroundScriptError: action.payload }
-    default:
-      return state
-  }
-}
-
-/**
- * Probably cause issues, since onplaying will fire after
- * a skip event.
- * Should these be promises that get resolved before things
- *
- * ALSO, can add the listener thing to state. That way a fn
- * can be made that sets the listener, and assigned to onplaying.
- * it also allows for structured clearing of the listener onpause.
- */
-// video.onplaying = () => createListener(state, video, dispatch)
-// video.onseeked = () => handleSeek(state, dispatch, browser)
-// video.onpause = () => clearTimeout(state.listener)
-
-/**
- * Content Script:
- *
- *  Initiate request to bg script.
- *  Receive data and perform skips as necessary.
- *
- *  IIFE that:
- *    - [✅] captures the video element
- *    - [✅] gets the vod id
- *    - [✅] requests data from bg script.
- *    - [🔃] Receives data. Performs skips based on it.
- *    - [❔] When a skip is performed, send the new time to popup script.
- */
-
-/**
- * Process:
- * - On load, contact bg for data.
- * - Get the data. Find the nearest segment relative to current position.
- * - Clear any previous timeouts that may exist.
- * - Create a new timeout for skipping ahead.
- * - The fn should check if the user is within a segment's bounds. If they are, skip ahead.
- * - If it's before the bounds, calculate a new listener. Remove this one. (return specific code?)
- * - If it's after the bounds, calculate this a new listener. Remove this one.
- * - What about: creating a spare listener. If something is in the main one, store it in the spare.
- *  - UseEffect for the spare. If anything is ever there, clear it.
- * - When a seek happens, Clear any present listener. Trying to differentiate may just take too long.
- *  - On playing will create a new listener anyway, so might be better to just clear it.
- * - Pauses should clear all listeners.
- * - on seek should clear any listener present
- */
-
-/**
- * Known issues:
- * [] Content script not sending getData message or response is not being received.
- * [] useEffect for checking for state.skipped doesn't work. For some reason, it only triggers on component load.
- *  - This could be because of poor implementation. Need to add handling for state.skipped in performSkip function?
- * [⚠️] The onplaying event triggers a lot. This is because the getData message is not being sent or received, but if there are no muted segments, there should not be a listener. The listener is still created and `DEFAULTINTERVAL` is still set, causing the onplaying handler function to be called ever `DEFAULTINTERVAL` seconds.
- *  - Solved by checking if nearestSegment has default property instead of seeing if it's undefined. Don't know if everything works when actual vod data is given.
- * [] Shit not working on reload. (some issue w/ browser polyfill - "document is not defined"?)
- */
-
 const ContentScript: React.FC = () => {
   const [state, dispatch] = useReducer(reducer, initialState)
   const vodID = document.location.pathname.split("/")[2]
+  const [loaded, setLoaded] = useState(false)
+  const [attempts, setAttempts] = useState(2)
   const video = document.querySelector("video")!
+
+  let listener = useRef<NodeJS.Timeout | undefined>(undefined)
 
   // using this format to take advantage of removeEventListener
   const seekedHandler = () => {
     // ! Remove this
     console.log("Seek detected!")
     if (state.mutedSegments.length > 0) {
-      handleSeek(state, dispatch, browser, video)
+      clearTimeout(listener.current)
+
+      const nearest = findNearestMutedSegment(video, state.mutedSegments)
+      console.log(`New nearest segment: ${JSON.stringify(nearest)}`)
+      dispatch({ type: "SET_NEAREST", payload: nearest })
     } else {
       // ! Remove this
       console.log("Not handling the seek, but here's some juice: 🧃")
@@ -139,33 +68,95 @@ const ContentScript: React.FC = () => {
 
   // create the listener only if there are muted segments
   const playingHandler = () => {
+    // deduct an attempt for useEffect
+    // to pause and play video.
+    if (attempts > 2 && !loaded) {
+      setAttempts(attempts - 1)
+      return
+    }
+
     // ! Remove this
     console.log("Video playing")
-    if (state.mutedSegments.length > 0) {
+    if (state.nearestSegment.hasOwnProperty("default")) {
       // ! Remove this
-      console.log("There are some muted segments, creating a listener!")
-      // ensure proper state information is passed to createListener
-      // Make sure old listener is cleared and state is updated
-      clearTimeout(state.listener)
-      // await new Promise(resolve => setTimeout(resolve, 500))
-      createListener(state, video, dispatch)
-    } else {
+      // Segments are calculated on mount
+      console.log(
+        `Exiting playing handler because nearest is a default segment: ${JSON.stringify(
+          state.nearestSegment,
+        )}`,
+      )
+      return
+    } else if (state.mutedSegments.length === 0) {
       // ! Remove this
       console.log("No muted segments so no listener, but here's a pizza: 🍕")
+      return
+    }
+
+    const { startingOffset, endingOffset } = state.nearestSegment
+    // ! Remove this
+    console.log("There are some muted segments, creating a listener!")
+    if (video.currentTime < startingOffset) {
+      // ! Remove this
+      // Creating a listener
+      if (listener.current === undefined) {
+        listener.current = createListener(startingOffset, video, endingOffset)
+      } else {
+        // ! Remove this
+        console.log(
+          `Listener is currently full, will not overwrite: ${listener.current}`,
+        )
+      }
+    } else if (video.currentTime > startingOffset) {
+      // if inside the muted segment but not past it
+      if (video.currentTime < endingOffset) {
+        // ! Remove this
+        console.log(
+          `Current time ${video.currentTime} is > starting offset ${startingOffset} but < ending offset ${endingOffset}, so skipping.`,
+        )
+        performSkip(video, startingOffset, endingOffset)
+        console.log(
+          "Setting nearest muted segment after skip (inside of segment).",
+        )
+        const nearest = findNearestMutedSegment(video, state.mutedSegments)
+        dispatch({ type: "SET_NEAREST", payload: nearest })
+      } else {
+        // If the current position is ahead of the nearest segment
+        // And it's not a default one
+        // (This might be false when vod playback starts at 0 for example)
+        console.log(
+          `Seems I've passed the nearest muted segment ${JSON.stringify(
+            state.nearestSegment,
+          )}. Setting a new one.`,
+        )
+        const nearest = findNearestMutedSegment(video, state.mutedSegments)
+        dispatch({ type: "SET_NEAREST", payload: nearest })
+        console.log(`The new nearest: ${JSON.stringify(nearest)}`)
+      }
+    } else {
+      // segment start time is equal to current time - add margin of error?
+      // ! Remove this
+      console.log(
+        `segment start time: ${state.nearestSegment.startingOffset} is not > or < than current video time: ${video.currentTime} - skipping ahead.`,
+      )
+      performSkip(video, startingOffset, endingOffset)
+      console.log("Setting nearest muted segment after skip.")
+      const nearest = findNearestMutedSegment(video, state.mutedSegments)
+      dispatch({ type: "SET_NEAREST", payload: nearest })
+      // seek handler will clear listeners
     }
   }
+
   const pauseHandler = () => {
     // ! Remove this
-    console.log("Video paused")
-    if (state.listener !== undefined) {
-      // ! Remove this
-      console.log("Clearing listeners due to pause")
-      clearTimeout(state.listener)
-      dispatch({ type: "SET_LISTENER", payload: undefined })
-    } else {
-      // ! Remove this
-      console.log("No listeners, but here's a hotdog: 🌭")
-    }
+    console.log("Video paused - clearing listeners")
+    clearTimeout(listener.current)
+    listener.current = undefined
+
+    // clearTimeout(state.listener)
+    // clearTimeout(state.spareListener)
+
+    // dispatch({ type: "SET_SPARE_LISTENER", payload: undefined })
+    // dispatch({ type: "SET_LISTENER", payload: undefined })
   }
 
   const setupListeners = () => {
@@ -177,13 +168,36 @@ const ContentScript: React.FC = () => {
     video.addEventListener("pause", pauseHandler)
   }
 
+  /**
+   * Remove every listener from state.
+   * Remove every listener attached to video element.
+   */
   const tearDownListeners = () => {
     video.removeEventListener("playing", playingHandler)
     video.removeEventListener("seeked", seekedHandler)
     video.removeEventListener("pause", pauseHandler)
+
+    clearTimeout(listener.current)
   }
 
+  // On mount useEffect
   useEffect(() => {
+    ;(async () => {
+      console.log("Starting bg script fetching")
+      // TODO: DRY this up - redundancy in fetchDataFromBGScript fn
+      const stuff = await fetchDataFromBGScript(vodID, browser, video)
+      if (stuff instanceof Error || stuff === undefined) {
+        console.log(`Something's wrong with stuff: ${stuff}`)
+        return
+      } else {
+        console.log(`Stuff: ${stuff}`)
+        dispatch({ type: "SET_MUTED_SEGMENTS", payload: stuff.segments })
+        dispatch({ type: "SET_NEAREST", payload: stuff.nearest })
+      }
+      console.log("Done fetching shit and set in state!")
+      setLoaded(true)
+    })()
+
     console.log("The content script is le loaded!")
 
     const popupListener = (
@@ -226,31 +240,6 @@ const ContentScript: React.FC = () => {
       }
     }
 
-    ;(async () => {
-      const { data }: GetDataResponse = await browser.runtime.sendMessage({
-        action: "getData",
-        data: vodID,
-      })
-      // ! Remove this
-      // console.log(`Received a response from bg!: ${data}`)
-      if (data instanceof Error) {
-        console.error(`Got an error! ${data}`)
-        dispatch({ type: "SET_ERROR", payload: data.message })
-      } else if (data.length === 0) {
-        // Returning if there's no data
-        // since initial reducer state has dummy data
-        console.log(`Muted segments not found for vod ${vodID}.`)
-        return
-      } else {
-        console.log(`Found ${data.length} muted segments for vod ${vodID}.`)
-        dispatch({ type: "SET_MUTED_SEGMENTS", payload: data })
-        dispatch({
-          type: "SET_NEAREST",
-          payload: findNearestMutedSegment(video, data),
-        })
-      }
-    })()
-
     browser.runtime.onMessage.addListener(popupListener)
 
     return () => {
@@ -259,268 +248,32 @@ const ContentScript: React.FC = () => {
     }
   }, [])
 
+  // finished loading useEffect
   useEffect(() => {
-    // console.log(
-    //   `State.nearestSegment has changed!: ${
-    //     state.nearestSegment
-    //   } stringified: ${JSON.stringify(state.nearestSegment)}`,
-    // )
-    // console.log(
-    //   `State.mutedSegments has changed!: ${
-    //     state.mutedSegments
-    //   } stringified: ${JSON.stringify(state.mutedSegments)}`,
-    // )
+    console.log(`Loaded vod data from bg script.`)
     setupListeners()
-  }, [state.nearestSegment, state.mutedSegments])
+  }, [loaded])
 
+  // Re-establish the playing handler when
+  // A new nearest segment is set
   useEffect(() => {
-    console.log(`State.listener has changed to!:`)
-    console.log(state.listener)
-    console.log()
-    // console.log(`Full state: ${JSON.stringify(state)}`)
-    console.log()
-    // if (state.listener === undefined) {
-    //   console.log("Clearing listener in useEffect:", state.listener)
-    //   clearTimeout(state.listener)
-    // }
-  }, [state.listener])
+    console.log("Nearest segment has changed, setting playing listener")
+    video.addEventListener("playing", playingHandler)
 
-  useEffect(() => {
-    if (state.skipped) {
-      console.log("Clearing state.listener because state.skipped is true")
-      clearTimeout(state.listener)
+    return () => {
+      console.log("Nearest segment has changed, clearing playing listener")
+      video.removeEventListener("playing", playingHandler)
     }
-  }, [state.skipped])
+  }, [state.nearestSegment])
+  // When an attempt is deducted, pause and replay the video
+  // to re-trigger the onplaying event with current state data
   // useEffect(() => {
-  //   console.log("The video is now playing! (onplaying)")
-  // }, [video.onplaying])
-
-  // useEffect(() => {
-  //   console.log(`A skip was something'd: ${state.skipped}`)
-  // }, [state.skipped])
+  //   console.log(`${attempts} Left`)
+  //   video.pause()
+  //   video.play()
+  // }, [attempts])
 
   return null
 }
 
 export default ContentScript
-
-// export default () => {
-//   const [fact, setFact] = useState("Click the button to fetch a fact!")
-//   const [loading, setLoading] = useState(false)
-
-//   const [state, dispatch] = useReducer(reducer, initialState)
-
-//   const video = document.querySelector("video") as HTMLVideoElement
-
-// Flow:
-// retrieve VOD data & user skip method preference.
-// video.onplaying = listenForMutedSegments().
-// video.onseeked = handleSeek().
-
-// Update SkipMethod in localStorage once the user toggles it
-// useEffect(() => {
-//   const userSettings = JSON.parse(localStorage.getItem("vodskipper"))
-//   userSettings.SkipMethod = SkipMethod
-//   localStorage.setItem("vodskipper", JSON.stringify(userSettings))
-// }, [SkipMethod])
-
-//   async function handleOnClick() {
-//     console.log("Clicked!")
-//     setLoading(true)
-//     const { data } = await browser.runtime.sendMessage({ action: "fetch" })
-//     setFact(data)
-//     setLoading(false)
-//     console.log("Video: ", video)
-//   }
-
-//   /**
-//    * Retrieve the muted segment data for this VOD. Look in
-//    * local storage, or contact Twitch API if necessary.
-//    */
-//   async function fetchMutedSegments(): Promise<void> {
-// Sanity check to make sure video element exists
-//     if (!video) {
-//       return
-//     }
-
-//     const vodID = document.location.pathname.split("/")[2]
-
-// ! Fix this. Change skip method to enabled / disabled.
-//     try {
-//       /**
-//        * Retrieve current settings. Looking for skip method
-//        * as well as skip data for the current vod.
-//        */
-//       const userSettings = JSON.parse(localStorage.getItem("vodskipper") ?? "")
-
-//       /**
-//        * Create a dummy settings object. Using this as a template to
-//        * either add newly retrieved data, or to easily handle nonexistent
-//        * properties.
-//        */
-//       let settings = {
-//         enabled: userSettings?.settings?.enabled || true,
-//         vodData: userSettings?.settings?.vodData || {},
-//       } // initialize settings object
-
-//       /**
-//        * If there is no data for this vod, retrieve it using the bg script.
-//        * Add the new skip data to the settings object. Update localStorage
-//        * with the new settings.
-//        */
-//       if (userSettings?.settings?.vodData[vodID] === undefined) {
-//         const data = await browser.runtime.sendMessage({ vodID })
-
-//         if (data instanceof Error) {
-//           console.error(data)
-//           return
-//         }
-
-//         settings.vodData[vodID] = {
-//           mutedSegments: data,
-//           // exp: Date.now() + EXPIRES_IN
-//         }
-
-//         localStorage.setItem("vodskipper", JSON.stringify(settings))
-//       }
-
-//       /**
-//        * Set skip data and skip method that will be used when actually
-//        * skipping through the vod.
-//        */
-//       // ? useReducer
-//       dispatch({ type: "SET_ENABLED", payload: settings.enabled })
-//       dispatch({ type: "SET_MUTED_SEGMENTS", payload: settings.vodData[vodID] })
-//       // setDefaultSkipMethod(settings.SkipMethod)
-//       // setMutedSegments(settings.vodData[vodID])
-
-//       // TODO: Implement expiration? How? Session storage or manual cleanup check localStorage on each page load?
-//     } catch (error) {
-//       // TODO: Send this to error handler or whatever (some centralized error handler - kibana?)
-//       console.error(`Unable to fetch the skip data: ${error}`)
-//     }
-//   }
-
-//   /**
-//    * Looks for the muted segment closest to
-//    * the video's current time. If no segment
-//    * is found, the user has most likely passed all of them.
-//    * @returns The segment or undefined.
-//    */
-//   function findNearestMutedSegment(
-//     mutedSegments: MutedVodSegment[],
-//   ): MutedVodSegment {
-//     // don't bother skipping if a muted
-//     // segment will end in 3 seconds.
-//     const cutoffPoint = 3
-
-//     return (
-//       mutedSegments.find(segment => {
-//         if (video?.currentTime <= segment.startingOffset) {
-//           return segment
-//         } else if (video?.currentTime > segment.startingOffset) {
-//           if (video?.currentTime < segment.endingOffset - cutoffPoint) {
-//             return segment
-//           }
-//         }
-//       }) || DEFAULTSEGMENT
-//     )
-//   }
-
-//   /**
-//    * Listen for a muted segment during VOD playback.
-//    */
-//   function listenForMutedSegments(skipMethod: SkipMethod) {
-//     dispatch({
-//       type: "SET_NEAREST",
-//       payload: findNearestMutedSegment(state.mutedSegments),
-//     })
-//     // setNearestSegment(findNearestMutedSegment(mutedSegments))
-
-//     const DEFAULTINTERVAL = 1000
-//     /**
-//      * - Determine the interval for setInterval by getting the
-//      *    - distance from the current time to the next startingOffset.
-//      * - Verify the offset exists, and that the distance value is positive.
-//      * - If there's no offset, nearestSegment will be undefined, and
-//      *    - setInterval will return after DEFAULTINTERVAL's delay.
-//      * - If the distance value is negative, we're already inside a
-//      *    - mutedSegment. The skip will occur after a DEFAULTINTERVAL's delay.
-//      */
-//     const INTERVAL = state.nearestSegment?.startingOffset
-//       ? state.nearestSegment.startingOffset - video.currentTime > 0
-//         ? state.nearestSegment.startingOffset - video.currentTime
-//         : DEFAULTINTERVAL
-//       : DEFAULTINTERVAL
-
-//     /**
-//      * Set how long we should listen for an undo.
-//      * If the time until the next muted segment is
-//      * less than 5 seconds, we'll just listen for an undo
-//      * until that segment to be skipped is reached.
-//      */
-//     const UNDOTIMEOUT = INTERVAL > 5000 ? 5000 : INTERVAL
-
-//     /**
-//      * Check where we're at in the VOD.
-//      * Perform skip if necessary.
-//      * TODO: Fix to check length of keys.
-//      */
-//     setInterval(() => {
-//       /**
-//        * Nothing to wait for - no next segment.
-//        */
-//       if (state.nearestSegment === undefined) {
-//         return
-//       }
-
-//       if (
-//         video.currentTime >= state.nearestSegment.startingOffset &&
-//         video.currentTime < state.nearestSegment.endingOffset
-//       ) {
-//         if (state.enabled) {
-//           // ? useReducer
-//           video.currentTime = state.nearestSegment.endingOffset
-//           dispatch({
-//             type: "SET_PREV_MUTED_SEGMENT",
-//             payload: state.nearestSegment,
-//           })
-//           // setPrevMutedSegment(state.nearestSegment)
-//           dispatch({
-//             type: "SET_NEAREST",
-//             payload: findNearestMutedSegment(state.mutedSegments),
-//           })
-//         }
-//       }
-//     }, INTERVAL)
-//   }
-
-// return (
-//   <div className="flex flex-col gap-4 p-4 shadow-sm bg-black bg-opacity-100 p-4 w-96">
-//     <h1>VODSkipper</h1>
-//     <div className="border border-solid border-gray-700"></div>
-//     <div>
-//       <ToggleSwitchWithLabel
-//         switchTitle={"Prompt Me Before Skipping"}
-//         switchDescription={
-//           "Check to be prompted before skipping a muted section."
-//         }
-//         enabled={state.enabled}
-//         setEnabled={(enabled: boolean) => {
-//           !enabled
-//           dispatch({ type: "SET_ENABLED", payload: enabled })
-//         }}
-//       />
-//     </div>
-
-//     <div className="border border-solid border-gray-700"></div>
-
-//     <div
-//       hidden={false}
-//       className="text-center justify-center text-lg text-white mb-10"
-//     >
-//       {messages.passedAllSegmentsMessage}
-//     </div>
-//   </div>
-// )
-// }
