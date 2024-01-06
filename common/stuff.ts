@@ -1,7 +1,7 @@
 export interface SwitchProps {
   enabled: boolean
   switchTitle: string
-  setEnabled: () => void
+  setEnabled: () => Promise<void>
   switchDescription: string
 }
 

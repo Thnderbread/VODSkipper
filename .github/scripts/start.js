@@ -18,7 +18,11 @@ async function startBrowser(browserName) {
     ? {
       browserName,
       'goog:chromeOptions': {
-        args: [`--load-extension=${path.join(__dirname, '..', '..', 'dist')}`]
+        args: [
+          `--load-extension=${path.join(__dirname, '..', '..', 'dist')}`,
+          `--remote-debugging-port=9222`,
+          '--remote-debugging-host=0.0.0.0'
+        ]
       }
     }
     : { browserName }
@@ -32,7 +36,7 @@ async function startBrowser(browserName) {
     await browser.installAddOn(extension.toString('base64'), true)
   }
 
-  await browser.url('https://www.twitch.tv/videos/1954413289')
+  await browser.url('https://www.twitch.tv/videos/1983719883')
 }
 
 const browserName = process.argv.slice(2).pop() || 'chrome'

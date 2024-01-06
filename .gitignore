@@ -5,3 +5,6 @@ dist
 *.pem
 *.zip
 *.xpi
+*.png
+*.svg
+.env

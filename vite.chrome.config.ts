@@ -1,16 +1,16 @@
-import path from 'node:path'
+import path from "node:path"
 
-import { defineConfig } from 'vite'
+import { defineConfig } from "vite"
 
 const fetchVersion = () => {
   return {
-    name: 'html-transform',
+    name: "html-transform",
     transformIndexHtml(html: string) {
       return html.replace(
         /__APP_VERSION__/,
-        `v${process.env.npm_package_version}`
+        `v${process.env.npm_package_version}`,
       )
-    }
+    },
   }
 }
 
@@ -18,18 +18,19 @@ const fetchVersion = () => {
 export default defineConfig({
   plugins: [fetchVersion()],
   build: {
+    // sourcemap: true,
     emptyOutDir: false,
-    outDir: path.resolve(__dirname, 'dist'),
+    outDir: path.resolve(__dirname, "dist"),
     lib: {
-      formats: ['iife'],
-      entry: path.resolve(__dirname, 'background', 'index.ts'),
-      name: 'Cat Facts'
+      formats: ["iife"],
+      entry: path.resolve(__dirname, "background", "background.ts"),
+      name: "Cat Facts",
     },
     rollupOptions: {
       output: {
-        entryFileNames: 'background/background.js',
+        entryFileNames: "background/background.js",
         extend: true,
-      }
-    }
-  }
+      },
+    },
+  },
 })

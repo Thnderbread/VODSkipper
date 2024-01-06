@@ -1,13 +1,13 @@
 import React from "react"
 import { $, expect } from "@wdio/globals"
 import { render } from "@testing-library/react"
-import browser from "webextension-polyfill"
+// import browser from "webextension-polyfill"
 
-import Component from "./component.js"
+import Popup from "./Popup.js"
 
 describe("Popup Component Tests", () => {
   it("should be able to fetch cat facts", async () => {
-    render(<Component />)
+    render(<Popup />)
     await expect($("h1")).toHaveText("VODSkipper")
   })
 })

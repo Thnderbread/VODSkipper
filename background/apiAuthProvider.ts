@@ -1,110 +1,109 @@
-import { config } from "dotenv"
-import { MutedVodSegment } from "../types"
-import formatCurrentTime from "./utils/formatTime"
-import { ApiClient, HelixVideo } from "@twurple/api/lib"
-import { RefreshingAuthProvider } from "@twurple/auth/lib"
-import { TwurpleError, isTwurpleError } from "./TwurpleError"
-import { HelixVideoMutedSegmentData } from "@twurple/api/lib/interfaces/endpoints/video.external"
-
-config()
-
-let authProvider: RefreshingAuthProvider
-
-// export auth provider from different file
-// import provider and export api client from diff file
-// this file will just make the api request.
-
-const userId = process.env.USER_ID as string
-const clientId = process.env.CLIENT_ID as string
-const clientSecret = process.env.CLIENT_SECRET as string
-
-const accessTokenString = process.env.ACCESS_TOKEN as string
-const refreshTokenString = process.env.REFRESH_TOKEN as string
-
-try {
-  authProvider = new RefreshingAuthProvider({ clientId, clientSecret })
-} catch (error) {
-  console.error(error)
-  throw error
-}
-
-export const apiClient = new ApiClient({ authProvider })
-
-authProvider.addUser(userId, {
-  accessToken: accessTokenString,
-  refreshToken: refreshTokenString,
-  expiresIn: 0,
-  obtainmentTimestamp: 0,
-})
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import axios from "./utils/axios"
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { isAxiosError, type AxiosResponse } from "axios"
+import {
+  type VodSegment,
+  type MutedVodSegment,
+  type MutedSegmentResponse,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  type ApiResponse,
+} from "../types"
 
 /**
  * Formats the muted segment data retrieved from
  * Twitch. Adds an endingOffset property.
  *
- * @param mutedSegments The muted segments array
+ * @param {VodSegment[]} mutedSegments The muted segments array
  * received from Twitch.
+ * @returns {MutedVodSegment[]} Array containing the formatted
+ * segments.
  */
-function formatMutedSegmentsData(
-  mutedSegments: HelixVideoMutedSegmentData[],
+export function formatMutedSegmentsData(
+  mutedSegments: VodSegment[],
 ): MutedVodSegment[] {
+  console.log("INSIDE THE FORMATTING FUNCTION")
   // eslint-disable-next-line @typescript-eslint/require-array-sort-compare
-  return mutedSegments
+  const sortedSegments = mutedSegments
     .map(segment => {
       const formattedSegment: MutedVodSegment = {
         duration: segment.duration,
         startingOffset: segment.offset,
         endingOffset: segment.offset + segment.duration,
-        readableOffset: formatCurrentTime(segment.offset),
+        readableOffset: "the real time is now type shit",
       }
       return formattedSegment
     })
     .sort()
+  for (const segment of sortedSegments) {
+    console.log(
+      `Segment stuff:\nDuration: ${segment.duration}
+      \nEnding offset: ${segment.endingOffset}
+      \nStarting offset: ${segment.startingOffset}
+      \nReadable: ${segment.readableOffset}`,
+    )
+  }
+  return sortedSegments
 }
 
 /**
  * Given a vodID, attempt to retrieve the VOD's muted segments data.
  *
- *
- * @param vodID String of the vod's id.
- * @returns A formatted array of all the muted segments in the vod w/
- * a property denoting when the segment ends. Returns undefined if the
- * vod has no muted segment data. This could be because the vod could not
- * be found, or there could simply be no data for the given vod.
+ * @param {string} vodID String of the vod's id.
+ * @returns {MutedSegmentResponse} A two-element tuple. The first element is an error or null,
+ * the second element is the formatted vod segment or undefined.
  */
-export async function getMutedVodSegmentsFromTwitch(
+export async function fetchVodData(
   vodID: string,
 ): Promise<MutedSegmentResponse> {
   console.debug(`Fetching muted segments for ${vodID}`)
-
-  let vod: HelixVideo | null
-  let mutedSegments: HelixVideoMutedSegmentData[] | undefined
-
   try {
-    vod = await apiClient.videos.getVideoById(vodID)
-    mutedSegments = vod?.mutedSegmentData
+    const controller = new AbortController()
+    const response = await fetch(`http://localhost:8000/vodData/${vodID}`, {
+      signal: controller.signal,
+      headers: {
+        "X-ServiceWorker-Origin": "VODSkipperSW",
+      },
+    })
+    const data: ApiResponse = await response.json()
+    console.log(`Response: ${JSON.stringify(data)}`)
 
-    return mutedSegments
-      ? [formatMutedSegmentsData(mutedSegments), ""]
-      : [undefined, "data not found"]
-  } catch (error: unknown) {
-    if (isTwurpleError(error)) {
-      const errorObj: TwurpleError = JSON.parse(error.body)
-      if (errorObj.status === 404) {
-        return [undefined, "data not found."]
-      } else if (errorObj.status === 401) {
-        // ? throw an error here?
-        return [undefined, new Error("Token Expired.")]
+    return [null, data.segments]
+  } catch (error) {
+    // TODO: change from axios architecture
+    if (isAxiosError(error)) {
+      // ? Failure cases return only codes. Could checking
+      // ? for undefined here cause confusion / issues?
+      if (error?.response === undefined) {
+        console.error(
+          `No error or sumn, couldn't fetch stuff: ${JSON.stringify(error)}`,
+        )
+        return [error]
+      } else if (error.response.status === 401) {
+        console.error(
+          `Failed the shit cuz of some shit: ${JSON.stringify(error)}`,
+        )
+        return [error]
+      } else if (error.response.status === 404) {
+        console.error(
+          `No muted segments found for this vod. ${JSON.stringify(error)}`,
+        )
+        return [new Error("No muted segments found for this vod.")]
+      } else if (error.response.status === 405) {
+        console.error("Invalid HTTP method.")
+        return [error]
       }
-      console.error(`Twurple Error: ${error.body}`)
-    } else {
-      console.error(`Error: ${error}`)
-      throw error
+      console.error(
+        `Failed to fetch vod data (not an axios error): ${JSON.stringify(
+          error,
+        )}`,
+      )
+      return [error]
     }
   }
-  return [undefined, "data not found"]
+  /**
+   * Returning this to avoid [Symbol.iterator]() error
+   * That occurs when return type is <MutedSegmentResponse | undefined>.
+   */
+  return [null, undefined]
 }
-
-type FailureInfo = string | Error
-type SegmentData = MutedVodSegment[] | undefined
-
-type MutedSegmentResponse = [SegmentData, FailureInfo]

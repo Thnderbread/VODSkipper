@@ -1,1 +1,10 @@
-build/
+e2e
+dist
+vite.*
+wdio.*
+build
+assets
+.vscode
+.github
+*.config
+__mocks__

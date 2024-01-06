@@ -5,11 +5,32 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch Chrome",
+            "request": "launch",
+            "type": "chrome",
+            "url": "https://www.twitch.tv/videos/1954413289",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
             "name": "Attach to Chrome",
-            "port": 56723,
+            "port": 9222,
             "request": "attach",
             "type": "chrome",
             "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch ts-node joint",
+            "runtimeExecutable": "node",
+            "args": [
+                "--loader=ts-node/esm",
+                "background/apiAuthProvider.ts"
+            ],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "console": "integratedTerminal"
         }
     ],
 }

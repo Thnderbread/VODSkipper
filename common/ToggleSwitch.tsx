@@ -1,15 +1,15 @@
 import clsx from "clsx"
 import React from "react"
-import { SwitchProps } from "./stuff"
+import { type SwitchProps } from "./stuff"
 
-export const ToggleSwitchWithLabel = (props: SwitchProps) => {
+export const ToggleSwitchWithLabel = (props: SwitchProps): JSX.Element => {
   return (
     <div className={clsx("flex items-center justify-between")}>
       <div className="mr-4 mb-2">
         <label className={clsx("text-lg text-white dark:text-gray-400")}>
           {props.switchTitle}
         </label>
-        <p className={clsx("text-gray-500", "text-left")}>
+        <p className={clsx("text-white", "text-left")}>
           {props.switchDescription}
         </p>
       </div>
