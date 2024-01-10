@@ -1,7 +1,10 @@
-// ! Remove this
 import DEFAULTSEGMENT from "./common/DefaultSegment"
-import formatCurrentTime from "./background/utils/formatTime"
-import type { MutedVodSegment, ShouldMakeListenerResponse } from "./types"
+import type {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  SegmentInfo,
+  MutedVodSegment,
+  ShouldMakeListenerResponse,
+} from "./types"
 
 /**
  * Looks for the muted segment closest to
@@ -15,13 +18,6 @@ export const findNearestMutedSegment = (
   video: HTMLVideoElement,
   mutedSegments: MutedVodSegment[],
 ): MutedVodSegment => {
-  // ! Remove this
-  // console.log(
-  //   `Looking for nearest muted segment in muted segments!: ${mutedSegments}`,
-  // )
-  // Removed the cutoff check - if by some chance a user is
-  // at a point where a segment ends in < 3 seconds and DEFAULTSEGMENT is returned, this will present an issue for any subsequent muted segment - the seek will not occur and the next nearest segment will not be set.
-
   return (
     mutedSegments.find(segment => {
       // Before or at / in the segment
@@ -53,16 +49,9 @@ export function calculateInterval(
   startingOffset: number,
   endingOffset: number,
 ): number {
-  // ! Remove this
-  // console.log("Trying to find the interval...")
-  // console.log(
-  //   `Nearest segment time: ${startingOffset} | Ending offset: ${endingOffset}`,
-  // )
   const DEFAULTINTERVAL = 1000
   const difference = endingOffset - startingOffset
 
-  // TODO: Round up to make sure interval is always at or after the start of a segment
-  // return difference > 0 ? difference * 1000 + 200 : DEFAULTINTERVAL
   return difference > 0 ? Math.ceil(difference * 1000) : DEFAULTINTERVAL
 }
 
@@ -77,10 +66,8 @@ export function performSkip(
   startingOffset: number,
   endingOffset: number,
 ): void {
-  // ! Remove this
   console.log(`Skipping from: ${startingOffset} to ${endingOffset}`)
   video.currentTime = endingOffset
-  console.log("performSkip execution finished!")
 }
 
 // enum CreateListenerCodes {
@@ -105,31 +92,15 @@ export function createListener(
   endingOffset: number,
   video: HTMLVideoElement,
 ): NodeJS.Timeout {
-  // ! Remove this
-  console.log("Creating a new listener")
   const int = calculateInterval(video.currentTime, startingOffset)
-  // ! Remove this
-  console.log(
-    `The created interval: ${int} Will trigger skip in: ${formatCurrentTime(
-      int / 1000,
-    )} The skip will trigger at ${formatCurrentTime(
-      int / 1000 + video.currentTime,
-    )} And The nearest starting offset is ${formatCurrentTime(
-      startingOffset,
-    )} And nearest ending is: ${formatCurrentTime(
-      endingOffset,
-    )}. Current video time is ${formatCurrentTime(video.currentTime)}`,
-  )
   const listener = setTimeout(() => {
     performSkip(video, startingOffset, endingOffset)
-    // TODO: Need a clearTimeout here?
   }, int)
-  console.log("createListener execution finished!")
   return listener
 }
 
 /**
- * Checks if nearest is default and if there are muted segs, returns if either is true
+ * Checks if nearest is default and if there are muted segments, returns if either is true
  * Creates a new listener
  *  - Doesn't overwrite a listener if one is set already
  * Skips if inside the muted segment
@@ -137,20 +108,29 @@ export function createListener(
  */
 /**
  * Determines whether or not a listener should be created.
- *
- * @param {MutedVodSegment} nearestSegment The current closest muted segment.
- * @param {MutedVodSegment[]} mutedSegments An array containing all muted segments for a vod.
+ * @param {SegmentInfo} segmentInfo Object containing info about the video's segments.
+ * @param {MutedVodSegment} [segmentInfo.nearestSegment] nearestSegment The current closest muted segment.
+ * @param {MutedVodSegment[]} [segmentInfo.mutedSegments] mutedSegments An array containing all muted segments for a vod.
  * @returns {number} 0 If the listener should be created. 1 if there are no muted segments, and 2
  * if the nearest segment is a default segment.
  */
-export function shouldCreateListener(
-  nearestSegment: MutedVodSegment,
-  mutedSegments: MutedVodSegment[],
-): ShouldMakeListenerResponse {
-  if (mutedSegments.length === 0) {
+export function shouldCreateListener(segmentInfo: {
+  nearestSegment?: MutedVodSegment
+  mutedSegments?: MutedVodSegment[]
+}): ShouldMakeListenerResponse {
+  if (Object.entries(segmentInfo).length === 0) {
     return 1
-  } else if (Object.prototype.hasOwnProperty.call(nearestSegment, "default")) {
-    return 2
+  }
+  for (const [k, v] of Object.entries(segmentInfo)) {
+    if (k === "mutedSegments" && Array.isArray(v)) {
+      if (v.length === 0) {
+        return 2
+      }
+    } else if (k === "nearestSegment") {
+      if (Object.hasOwnProperty.call(v, "default")) {
+        return 3
+      }
+    }
   }
   return 0
 }

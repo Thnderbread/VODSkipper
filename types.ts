@@ -1,26 +1,27 @@
-/**
- * More touch ups
- * Test - see what fkn broke cuz yk you broke some shit
- */
 export type ResponseCallback = <T>(data: T) => void
-
-export type PopupMessage = SetEnabledMessage
 
 export type StorageArea = "local" | "session" | undefined
 
-export enum DecisionCodes {
-  Create = 0,
-  NoMutedSegments = 1,
-  NearestIsDefault = 2,
-}
-
-export type ShouldMakeListenerResponse = DecisionCodes
+export type StoredVodSegments = Record<string, MutedVodSegment[]>
 
 /**
- * What's set in local storage.
- * Vodskipper property is used as the
- * local storage item key.
+ * Tuple that either contains an error and undefined,
+ * Or null as the error and an array containing data
+ * on the vod's muted segments.
  */
+export type ShouldMakeListenerResponse = DecisionCodes
+
+export type PopupMessage = SetEnabledMessage | CheckEnabledMessage
+
+export type MutedSegmentResponse = [Error | null, MutedVodSegment[]?]
+
+export enum DecisionCodes {
+  Create = 0,
+  NoDataGiven = 1,
+  NoMutedSegments = 2,
+  NearestIsDefault = 3,
+}
+
 export interface LocalStorageSettings {
   vodskipper: {
     enabled: boolean
@@ -35,17 +36,12 @@ export interface VodSkipperSettings {
   enabled: boolean
 }
 
-export type StoredVodSegments = Record<string, MutedVodSegment[]>
-
+export interface SegmentInfo {
+  nearestSegment: MutedVodSegment
+  mutedSegments: MutedVodSegment[]
+}
 /**
- * Tuple that either contains an error and undefined,
- * Or null as the error and an array containing data
- * on the vod's muted segments.
- */
-export type MutedSegmentResponse = [Error | null, MutedVodSegment[]?]
-
-/**
- * Axios response from the api.
+ * Response from the proxy api.
  */
 export interface ApiResponse {
   segments: MutedVodSegment[]
@@ -56,9 +52,14 @@ export interface SetEnabledMessage {
   data: boolean
 }
 
+interface CheckEnabledMessage {
+  action: "checkEnabled"
+  data: boolean
+}
+
 export interface GetDataMessage {
   action: "getData"
-  data: string
+  vodID: string
 }
 
 export interface NoDataMessage {
@@ -66,61 +67,9 @@ export interface NoDataMessage {
   data: []
 }
 
-export interface UpdateTimeMessage {
-  action: "updateTime"
-  data: number
-}
-
 export interface GetDataResponse {
   data: MutedVodSegment[]
   error: Error | null
-}
-
-export enum NewListenerCodes {
-  /**
-   * For when there's no data at all.
-   */
-  NoMutedSegmentData = 0,
-  /**
-   * Successful listener registration.
-   */
-  RegisteredNewListener = 1,
-  /**
-   * Specifically for when there are
-   * no muted segments beyond the current
-   * point in the video.
-   */
-  NoMutedSegmentDetected = 2,
-}
-
-export interface NewListenerResponse {
-  data?:
-    | "No muted segments found for this vod."
-    | "No muted segments ahead."
-    | "Listener created."
-  error: Error
-}
-
-/**
- * Background script's response to a message
- * from the popup.
- */
-export interface PopupBGResponse {
-  error: Error | null
-  data: "Preferences updated." | boolean
-}
-
-/**
- * Content script's response to a message
- * from the popup.
- */
-export interface PopupCSResponse {
-  error: Error | null
-  data:
-    | "No muted segments found for this vod."
-    | "No muted segments ahead."
-    | "Listeners cleared."
-    | "Listener created."
 }
 
 /**

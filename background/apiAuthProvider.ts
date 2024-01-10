@@ -1,13 +1,8 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import axios from "./utils/axios"
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { isAxiosError, type AxiosResponse } from "axios"
 import {
   type VodSegment,
+  type ApiResponse,
   type MutedVodSegment,
   type MutedSegmentResponse,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  type ApiResponse,
 } from "../types"
 
 /**
@@ -22,9 +17,8 @@ import {
 export function formatMutedSegmentsData(
   mutedSegments: VodSegment[],
 ): MutedVodSegment[] {
-  console.log("INSIDE THE FORMATTING FUNCTION")
   // eslint-disable-next-line @typescript-eslint/require-array-sort-compare
-  const sortedSegments = mutedSegments
+  return mutedSegments
     .map(segment => {
       const formattedSegment: MutedVodSegment = {
         duration: segment.duration,
@@ -35,15 +29,6 @@ export function formatMutedSegmentsData(
       return formattedSegment
     })
     .sort()
-  for (const segment of sortedSegments) {
-    console.log(
-      `Segment stuff:\nDuration: ${segment.duration}
-      \nEnding offset: ${segment.endingOffset}
-      \nStarting offset: ${segment.startingOffset}
-      \nReadable: ${segment.readableOffset}`,
-    )
-  }
-  return sortedSegments
 }
 
 /**
@@ -57,53 +42,27 @@ export async function fetchVodData(
   vodID: string,
 ): Promise<MutedSegmentResponse> {
   console.debug(`Fetching muted segments for ${vodID}`)
+  const controller = new AbortController()
+  const requestTimeout = setTimeout(() => {
+    controller.abort()
+  }, 5000)
   try {
-    const controller = new AbortController()
     const response = await fetch(`http://localhost:8000/vodData/${vodID}`, {
       signal: controller.signal,
-      headers: {
-        "X-ServiceWorker-Origin": "VODSkipperSW",
-      },
     })
+    if (!response.ok) {
+      console.error(`Code: ${response.status} | Text: ${response.statusText}`)
+      return [new Error("Something went wrong."), undefined]
+    }
     const data: ApiResponse = await response.json()
-    console.log(`Response: ${JSON.stringify(data)}`)
+    clearTimeout(requestTimeout)
 
     return [null, data.segments]
-  } catch (error) {
-    // TODO: change from axios architecture
-    if (isAxiosError(error)) {
-      // ? Failure cases return only codes. Could checking
-      // ? for undefined here cause confusion / issues?
-      if (error?.response === undefined) {
-        console.error(
-          `No error or sumn, couldn't fetch stuff: ${JSON.stringify(error)}`,
-        )
-        return [error]
-      } else if (error.response.status === 401) {
-        console.error(
-          `Failed the shit cuz of some shit: ${JSON.stringify(error)}`,
-        )
-        return [error]
-      } else if (error.response.status === 404) {
-        console.error(
-          `No muted segments found for this vod. ${JSON.stringify(error)}`,
-        )
-        return [new Error("No muted segments found for this vod.")]
-      } else if (error.response.status === 405) {
-        console.error("Invalid HTTP method.")
-        return [error]
-      }
-      console.error(
-        `Failed to fetch vod data (not an axios error): ${JSON.stringify(
-          error,
-        )}`,
-      )
-      return [error]
+  } catch (error: unknown) {
+    if ((error as Error).name === "AbortError") {
+      console.error("Request ran too long, aborting.")
+      return [new Error("Request Timed out."), undefined]
     }
   }
-  /**
-   * Returning this to avoid [Symbol.iterator]() error
-   * That occurs when return type is <MutedSegmentResponse | undefined>.
-   */
   return [null, undefined]
 }

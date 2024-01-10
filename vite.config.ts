@@ -16,6 +16,7 @@ export default defineConfig({
   plugins: [fetchVersion()],
   build: {
     outDir: "dist",
+    sourcemap: true,
     emptyOutDir: false,
     rollupOptions: {
       input: {

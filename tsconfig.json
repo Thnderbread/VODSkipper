@@ -29,6 +29,7 @@
   "include": [
     "src",
     "popup",
+    "common",
     "types.ts",
     "background",
     "content-script",

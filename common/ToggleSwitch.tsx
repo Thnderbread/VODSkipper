@@ -1,6 +1,11 @@
 import clsx from "clsx"
 import React from "react"
-import { type SwitchProps } from "./stuff"
+interface SwitchProps {
+  enabled: boolean
+  switchTitle: string
+  setEnabled: () => Promise<void>
+  switchDescription: string
+}
 
 export const ToggleSwitchWithLabel = (props: SwitchProps): JSX.Element => {
   return (

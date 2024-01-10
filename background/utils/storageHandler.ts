@@ -17,18 +17,6 @@ export async function retrieveFromSessionStorage(
   key: string,
 ): Promise<StoredVodSegments> {
   const settings = await browser.storage.session.get(key)
-  // ! remove this
-  if (Object.keys(settings).length > 0) {
-    console.log(
-      `Found the settings in session storage!: ${JSON.stringify(settings)}`,
-    )
-  } else {
-    console.log(
-      `Didn't find the settings in session storage!: ${JSON.stringify(
-        settings,
-      )}`,
-    )
-  }
   return settings[key]
 }
 

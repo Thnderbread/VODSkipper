@@ -4,11 +4,6 @@ import { type Action, type State } from "../types"
 function reducer(state: State, action: Action) {
   switch (action.type) {
     case "SET_NEAREST":
-      console.log(
-        `In reducer changing nearest from ${JSON.stringify(
-          state.nearestSegment,
-        )} to ${JSON.stringify(action.payload)}`,
-      )
       return { ...state, nearestSegment: action.payload }
     case "SET_MUTED_SEGMENTS":
       return { ...state, mutedSegments: action.payload }
