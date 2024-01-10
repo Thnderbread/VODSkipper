@@ -112,7 +112,6 @@ const ContentScript: React.FC = () => {
       return
     }
     if (loaded && state.enabled) {
-      console.log(`Loaded vod data from bg script.`)
       setupListeners()
     }
   }, [loaded])
