@@ -36,7 +36,7 @@ async function startBrowser(browserName) {
     await browser.installAddOn(extension.toString('base64'), true)
   }
 
-  await browser.url('https://www.twitch.tv/videos/1983719883')
+  await browser.url('https://www.twitch.tv/videos/2045617286')
 }
 
 const browserName = process.argv.slice(2).pop() || 'chrome'
