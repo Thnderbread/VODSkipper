@@ -1,35 +1,6 @@
-import {
-  type VodSegment,
-  type ApiResponse,
-  type MutedVodSegment,
-  type MutedSegmentResponse,
-} from "../types"
+import type { ApiResponse, MutedSegmentResponse } from "../types"
 
-/**
- * Formats the muted segment data retrieved from
- * Twitch. Adds an endingOffset property.
- *
- * @param {VodSegment[]} mutedSegments The muted segments array
- * received from Twitch.
- * @returns {MutedVodSegment[]} Array containing the formatted
- * segments.
- */
-export function formatMutedSegmentsData(
-  mutedSegments: VodSegment[],
-): MutedVodSegment[] {
-  // eslint-disable-next-line @typescript-eslint/require-array-sort-compare
-  return mutedSegments
-    .map(segment => {
-      const formattedSegment: MutedVodSegment = {
-        duration: segment.duration,
-        startingOffset: segment.offset,
-        endingOffset: segment.offset + segment.duration,
-        readableOffset: "the real time is now type shit",
-      }
-      return formattedSegment
-    })
-    .sort()
-}
+const BASE_URL = "https://localhost:8000/vodData/"
 
 /**
  * Given a vodID, attempt to retrieve the VOD's muted segments data.
@@ -47,9 +18,10 @@ export async function fetchVodData(
     controller.abort()
   }, 5000)
   try {
-    const response = await fetch(`http://localhost:8000/vodData/${vodID}`, {
-      signal: controller.signal,
-    })
+    // ! Remove this
+    console.log("Attempting to fetch...")
+    const endpoint = BASE_URL + `/${vodID}`
+    const response = await fetch(endpoint, { signal: controller.signal })
     if (!response.ok) {
       console.error(`Code: ${response.status} | Text: ${response.statusText}`)
       return [new Error("Something went wrong."), undefined]
