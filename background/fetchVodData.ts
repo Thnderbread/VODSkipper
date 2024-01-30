@@ -1,6 +1,6 @@
 import type { ApiResponse, MutedSegmentResponse } from "../types"
 
-const BASE_URL = "https://localhost:8000/vodData/"
+const BASE_URL = "http://localhost:8000/vodData/"
 
 /**
  * Given a vodID, attempt to retrieve the VOD's muted segments data.
@@ -18,9 +18,7 @@ export async function fetchVodData(
     controller.abort()
   }, 5000)
   try {
-    // ! Remove this
-    console.log("Attempting to fetch...")
-    const endpoint = BASE_URL + `/${vodID}`
+    const endpoint = BASE_URL + vodID
     const response = await fetch(endpoint, { signal: controller.signal })
     if (!response.ok) {
       console.error(`Code: ${response.status} | Text: ${response.statusText}`)

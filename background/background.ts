@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import browser from "webextension-polyfill"
-import { fetchVodData } from "./apiAuthProvider"
+import { fetchVodData } from "./fetchVodData"
 import {
   cacheSegments,
   setInLocalStorage,
@@ -132,26 +132,3 @@ browser.runtime.onMessage.addListener(
     }
   },
 )
-
-// type Message = {
-//   action: "fetch"
-//   value: null
-// }
-
-// type ResponseCallback = <T>(data: T) => void
-
-// async function handleMessage(
-//   { action, value }: Message,
-//   response: ResponseCallback,
-// ) {
-//   if (action === "fetch") {
-//     // debugger
-//     const result = await fetch("https://meowfacts.herokuapp.com/")
-
-//     const { data } = await result.json()
-
-//     response({ message: "success", data })
-//   } else {
-//     response({ data: null, error: "Unknown action" })
-//   }
-// }
