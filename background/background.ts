@@ -1,18 +1,17 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import browser from "webextension-polyfill"
 import { fetchVodData } from "./fetchVodData"
-import {
-  cacheSegments,
-  setInLocalStorage,
-  retrieveFromLocalStorage,
-  retrieveFromSessionStorage,
-} from "./utils/storageHandler"
 import type {
   GetDataMessage,
   ResponseCallback,
   LocalStorageSettings,
   PopupMessage,
 } from "../types"
+import {
+  cacheSegments,
+  setInLocalStorage,
+  retrieveFromLocalStorage,
+  retrieveFromSessionStorage,
+} from "./utils/storageHandler"
 
 browser.runtime.onInstalled.addListener(async () => {
   const vodskipperSettings: LocalStorageSettings = {
@@ -50,41 +49,21 @@ async function handleContentScriptMessage(
       response({ error: new TypeError("Invalid data received") })
       return undefined
     } else {
-      const cachedSegments = await retrieveFromSessionStorage("vodskipper")
-      try {
-        if (cachedSegments[vodID]?.length === 0) {
-          response({ data: [], error: null })
-          return undefined
-        } else if (cachedSegments[vodID].length > 0) {
-          response({ data: cachedSegments[vodID], error: null })
-          return undefined
-        }
-      } catch (error) {
-        if (error instanceof TypeError) {
-          console.error(
-            "No segments found in session store. Fetching from server",
-          )
-        }
+      const cached = await retrieveFromSessionStorage("vodskipper")
+
+      if (cached && cached[vodID]) {
+        response({ data: cached[vodID], error: null })
+        return undefined
       }
 
       const [error, segments] = await fetchVodData(vodID)
       await cacheSegments(vodID, segments ?? [])
 
       if (error !== null) {
-        if (error.message === "Something went wrong.") {
-          response({ error })
-          return true
-        } else if (error.message === "Request timed out.") {
-          response({ error })
-          return true
-        }
+        response({ error })
+        return true
       } else if (segments !== undefined) {
         response({ data: segments, error: null })
-        return true
-      } else {
-        // let popup know that no data was found
-        await browser.runtime.sendMessage({ action: "getData", data: [] })
-        response({ data: [], error: null })
         return true
       }
     }
@@ -127,7 +106,6 @@ browser.runtime.onMessage.addListener(
       return true
     } else {
       console.warn(`Unsupported action received: ${JSON.stringify(msg)}`)
-      response({ error: new Error("Unsupported action.") })
       return true
     }
   },

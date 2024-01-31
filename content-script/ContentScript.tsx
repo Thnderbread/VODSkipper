@@ -4,7 +4,13 @@ import reducer from "./reducer"
 import browser from "webextension-polyfill"
 import DEFAULTSEGMENT from "../common/DefaultSegment"
 import { useState, useEffect, useReducer, useRef } from "react"
-import { type State, type GetDataResponse, DecisionCodes } from "../types"
+import {
+  type State,
+  type GetDataResponse,
+  DecisionCodes,
+  ResponseCallback,
+  StatusMessage,
+} from "../types"
 import {
   createListener,
   shouldCreateListener,
@@ -54,13 +60,13 @@ const ContentScript: React.FC = () => {
     listener.current = undefined
   }
 
-  const setupListeners = (): void => {
+  const setupVideoListeners = (): void => {
     video.addEventListener("playing", playingHandler)
     video.addEventListener("seeked", seekedHandler)
     video.addEventListener("pause", pauseHandler)
   }
 
-  const tearDownListeners = (): void => {
+  const tearDownVideoListeners = (): void => {
     video.removeEventListener("playing", playingHandler)
     video.removeEventListener("seeked", seekedHandler)
     video.removeEventListener("pause", pauseHandler)
@@ -81,8 +87,8 @@ const ContentScript: React.FC = () => {
         dispatch({ type: "SET_ERROR", payload: error.message })
         setLoaded(true)
       } else if (data.length === 0) {
-        // Returning if there's no data
-        // since initial reducer state has dummy data
+        // Returning if there's no data since
+        // initial reducer state has dummy data
         setLoaded(true)
       } else {
         console.log(`Found ${data.length} muted segments for vod ${vodID}.`)
@@ -96,7 +102,7 @@ const ContentScript: React.FC = () => {
     })()
 
     return () => {
-      tearDownListeners()
+      tearDownVideoListeners()
     }
   }, [])
 
@@ -112,7 +118,7 @@ const ContentScript: React.FC = () => {
       return
     }
     if (loaded && state.enabled) {
-      setupListeners()
+      setupVideoListeners()
     }
   }, [loaded])
 
@@ -130,12 +136,51 @@ const ContentScript: React.FC = () => {
     }
   }, [state.nearestSegment])
 
+  // If extension is disabled at some point,
+  // Remove all listeners. Readd them when enabled
   useEffect(() => {
-    tearDownListeners()
+    tearDownVideoListeners()
     if (state.enabled) {
-      setupListeners()
+      setupVideoListeners()
     }
   }, [state.enabled])
+
+  useEffect(() => {
+    const statusMessageListener = (
+      msg: StatusMessage,
+      sender: browser.Runtime.MessageSender,
+      response: ResponseCallback,
+    ): void => {
+      // ! Remove this
+      console.log("Received message. trying to do stuff.")
+
+      // Not checking for attempts because
+      // it should be 0 by this point
+      if (state.error) {
+        // ! Remove this
+        console.log(
+          `Finished loading: ${loaded} but there's an error: ${state.error}`,
+        )
+        response({ error: state.error })
+        return
+      } else {
+        // ! Remove this
+        console.log(
+          `Everything's fine. Returning length: ${JSON.stringify(
+            state.mutedSegments,
+          )}`,
+        )
+        response({ segmentLength: state.mutedSegments.length })
+        return
+      }
+    }
+
+    browser.runtime.onMessage.addListener(statusMessageListener)
+
+    return () => {
+      browser.runtime.onMessage.removeListener(statusMessageListener)
+    }
+  }, [state.mutedSegments])
 
   return null
 }

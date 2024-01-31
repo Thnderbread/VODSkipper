@@ -22,6 +22,15 @@ export enum DecisionCodes {
   NearestIsDefault = 3,
 }
 
+export interface StatusMessage {
+  data: "getStatus"
+}
+
+export interface StatusMessageResponse {
+  segmentLength: number | null
+  error: Error | null
+}
+
 export interface LocalStorageSettings {
   vodskipper: {
     enabled: boolean
@@ -121,6 +130,7 @@ export interface State {
   error: string
 }
 
+// TODO: Set error payload to be specific strings.
 export type Action =
   | { type: "SET_ERROR"; payload: string }
   | { type: "SET_ENABLED"; payload: boolean }
