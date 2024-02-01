@@ -27,7 +27,7 @@
       "strict_min_version": "100.0"
     }
   },
-  "permissions": ["activeTab", "tabs", "cookies", "storage", "scripting"],
+  "permissions": ["activeTab", "tabs", "storage"],
   "icons": {
     "72": "vodskipper-72.png",
     "96": "vodskipper-96.png",
