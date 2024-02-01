@@ -28,7 +28,7 @@ export interface StatusMessage {
 
 export interface StatusMessageResponse {
   segmentLength: number | null
-  error: Error | null
+  error: string | null
 }
 
 export interface LocalStorageSettings {
@@ -78,7 +78,7 @@ export interface NoDataMessage {
 
 export interface GetDataResponse {
   data: MutedVodSegment[]
-  error: Error | null
+  error: string | null
 }
 
 /**
