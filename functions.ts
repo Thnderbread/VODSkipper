@@ -59,6 +59,7 @@ export function calculateInterval(
  * Skips the video ahead to the ending offset.
  *
  * @param {HTMLVideoElement} video The video element to perform the skip on.
+ * @param {number} startingOffset The point at which perform skip will trigger. Purely for logging.
  * @param {number} endingOffset The point to where the video should skip.
  */
 export function performSkip(
