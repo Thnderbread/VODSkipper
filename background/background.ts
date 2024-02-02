@@ -35,7 +35,7 @@ async function handleContentScriptMessage(
      */
     if (!enabled) {
       response({ data: null, error: new Error("Extension Disabled.") })
-      return undefined
+      return true
     } else if (enabled === undefined) {
       const vodskipperSettings: LocalStorageSettings = {
         vodskipper: {
@@ -47,22 +47,32 @@ async function handleContentScriptMessage(
 
     if (typeof vodID !== "string") {
       response({ error: new TypeError("Invalid data received") })
-      return undefined
+      return true
     } else {
       const cached = await retrieveFromSessionStorage("vodskipper")
 
       if (cached && cached[vodID]) {
         response({ data: cached[vodID], error: null })
-        return undefined
+        return true
       }
 
       const [error, segments] = await fetchVodData(vodID)
-      await cacheSegments(vodID, segments ?? [])
 
       if (error !== null) {
-        response({ error })
+        // ! Remove this
+        console.warn(`There's an error: ${error}`)
+        response({ error: error.message })
         return true
-      } else if (segments !== undefined) {
+      } else {
+        // ! Remove this
+        console.warn(
+          `Error is null: ${error} and there's data: ${JSON.stringify(
+            segments,
+          )}`,
+        )
+        // Segments is never undefined here
+        // since those cases store an error.
+        await cacheSegments(vodID, segments!)
         response({ data: segments, error: null })
         return true
       }
@@ -76,7 +86,8 @@ async function handlePopupMessage(
 ): Promise<void> {
   if (action === "setEnabled") {
     if (typeof data !== "boolean") {
-      response({ error: new TypeError("Invalid data received") })
+      // not responding here so error isn't set in popup display
+      console.warn("Invalid data received when changing enabled state")
       return
     }
     const vodskipperSettings: LocalStorageSettings = {
@@ -102,7 +113,10 @@ browser.runtime.onMessage.addListener(
       void handlePopupMessage(msg, response)
       return true
     } else if (msg.action === "getData") {
+      // ! Remove this
+      console.log("Received content script message.")
       void handleContentScriptMessage(msg, response)
+      console.log("Finished processing content script message.")
       return true
     } else {
       console.warn(`Unsupported action received: ${JSON.stringify(msg)}`)

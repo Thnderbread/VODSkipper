@@ -39,8 +39,11 @@ export async function fetchVodData(
   } catch (error: unknown) {
     if ((error as Error).name === "AbortError") {
       console.error("Request ran too long, aborting.")
-      return [new Error("Request Timed out."), undefined]
+      return [new Error("Server request timed out."), undefined]
+    } else if ((error as Error).message === "Failed to fetch") {
+      console.error("Couldn't contact server.")
+      return [new Error("Couldn't contact server."), undefined]
     }
   }
-  return [null, undefined]
+  return [new Error("Unexpected error occurred."), undefined]
 }

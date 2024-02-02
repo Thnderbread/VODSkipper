@@ -1,20 +1,26 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import browser from "webextension-polyfill"
 import React, { useEffect, useState } from "react"
-import type { StatusMessageResponse } from "../types"
+import sendStatusMessage from "./utils/statusMessageSender"
 
 const Popup = (): JSX.Element => {
+  const [result, setResult] = useState("")
+  // const [display, setDisplay] = useState("")
   const [enabled, setEnabled] = useState(true)
-  const [message, setMessage] = useState("Doing stuff...")
+  const [message, setMessage] = useState("Loading...")
 
-  const [error, setError] = useState("")
-  const [display, setDisplay] = useState("")
-
+  // todo: content script will need a check to ensure it's not running content script stuff on a page w/o vod id.
+  // todo: CHECK content script error cases & write e2es? How to check enabled status of extension? Check firefox v?
+  // todo: Check if the extension id is the same on firefox since cors can be triggered.
   /**
    * TODO: Check whether shit is enabled
    * TODO: Check whether segments exist
+   * TODO: USING "https://www.twitch.tv/videos/*" IN MATCHES FIELD TRIGGERS CORS! RE-ENABLE THAT SHIT
    * TODO: Check for server response
-   * TODO: If opened too soon, joint can incorrectly display no muted segments message.
+   * TODO: Go through all possible content script errors and see if they show up in the popup when they happen
+   * TODO: Try removing scripting permission and see if shit still works - user risk to have that needed.
+   * TODO: When you write e2es, cover a case where a call is made to server and stuff is cached. Reload the page & make sure cache persists, and popup message is correct.
+   * (or just write the e2es)
    * ? Only display message, error, or disabled joint. While fetching, show a loading thing.
    * ? Wait for fetching? i.e., if the content script is hit for stuff, be like yo it's still loading
    * ? and wait?
@@ -26,47 +32,33 @@ const Popup = (): JSX.Element => {
     }
 
     void (async () => {
+      /**
+       * Check result variable for saved
+       * message to avoid querying on each load
+       */
+      if (result) {
+        setMessage(result)
+        console.log(`There's already a result: ${result}.`)
+        return
+      }
+
+      // Check for active in case multiple vod
+      // tabs are open
+      // ! Test this works
+      result &&
+        console.log(
+          `There's already a result: ${result} so shouldn't see this.`,
+        )
       const tabs = await browser.tabs.query({
         url: "https://www.twitch.tv/videos/*",
+        // lastFocusedWindow: true,
+        active: true,
       })
       const currentTab = tabs[0]
 
-      if (currentTab && currentTab.id) {
-        // ! Remove this
-        console.log("Have the tab & id. Tryna get info.")
-        // Get information about the fetch operation -
-        const response: StatusMessageResponse = await browser.tabs.sendMessage(
-          currentTab.id,
-          {
-            action: "getStatus",
-          },
-        )
-        if (Object.hasOwnProperty.call(response, "error") && response.error) {
-          // ! Remove this
-          console.log(
-            `Got a response, but there's an error: ${JSON.stringify(
-              response.error,
-            )}`,
-          )
-          // TODO: Check if response.error is disabled extension, abort error, or any other specifics
-          setError(response.error.message)
-        } else if (response.segmentLength === 0) {
-          // ! Remove this
-          console.log("Got a response, no muted segments.")
-          setMessage("No muted segments for this vod.")
-        } else {
-          // ! Remove this
-          console.log("Got a response, everything is fine.")
-          setMessage(`This vod has ${response.segmentLength} muted segments.`)
-        }
-      } else {
-        // ! Remove this
-        console.warn(
-          `No tab ${currentTab} or tab id: ${
-            currentTab?.id
-          } or tabs: ${JSON.stringify(tabs)}`,
-        )
-      }
+      const response = await sendStatusMessage(currentTab)
+      setResult(response)
+      setMessage(response)
     })()
   }, [])
 
@@ -78,28 +70,16 @@ const Popup = (): JSX.Element => {
 
   useEffect(() => {
     if (!enabled) {
-      setDisplay("VODSkipper is currently disabled.")
+      setMessage("VODSkipper is currently disabled.")
     }
   }, [enabled])
-
-  useEffect(() => {
-    if (error !== "") {
-      setDisplay(error)
-    }
-  }, [error])
-
-  useEffect(() => {
-    if (message !== "") {
-      setDisplay(message)
-    }
-  }, [message])
 
   return (
     <div className="flex flex-col gap-4 p-4 shadow-sm bg-black bg-opacity-100 w-96">
       <h1>VODSkipper</h1>
       <div className="border border-solid border-gray-700"></div>
       <p className="text-center justify-center text-lg text-white mb-4">
-        {display}
+        {message}
       </p>
     </div>
   )

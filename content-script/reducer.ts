@@ -10,7 +10,7 @@ function reducer(state: State, action: Action) {
     case "SET_ENABLED":
       return { ...state, enabled: action.payload }
     case "SET_ERROR":
-      return { ...state, backgroundScriptError: action.payload }
+      return { ...state, error: action.payload }
     default:
       return state
   }
