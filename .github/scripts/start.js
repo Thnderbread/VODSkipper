@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import path from 'node:path'
 import url from 'node:url'
+import path from 'node:path'
 import fs from 'node:fs/promises'
 
 import { remote } from 'webdriverio'
@@ -25,18 +25,40 @@ async function startBrowser(browserName) {
         ]
       }
     }
-    : { browserName }
+    : browserName === 'firefox'
+      ? {
+        browserName,
+        'moz:firefoxOptions': {
+          args: ['-start-debugger-server', '6080'],
+          prefs: {
+            'devtools.debugger.remote-enabled': true,
+            'dom.disable_open_during_load': false,
+            'devtools.chrome.enabled': true,
+          }
+        }
+      } : { browserName }
   const browser = await remote({
     // logLevel: 'error',
     capabilities
   })
 
-  if (browserName === 'firefox') {
+  const vodUrl = 'https://www.twitch.tv/videos/2045617286'
+
+  const debuggingUrls = {
+    "edge": 'edge://extensions/?q=',
+    "chrome": 'chrome://extensions/',
+    "firefox": 'about:debugging#/runtime/this-firefox'
+  }
+
+  if (browserName === "firefox") {
     const extension = await fs.readFile(path.join(__dirname, '..', '..', `web-extension-firefox-v${pkg.version}.xpi`))
     await browser.installAddOn(extension.toString('base64'), true)
   }
 
-  await browser.url('https://www.twitch.tv/videos/2045617286')
+  await browser.execute((url) => {
+    window.open(url, '_blank')
+  }, vodUrl)
+  await browser.url(debuggingUrls[browserName])
 }
 
 const browserName = process.argv.slice(2).pop() || 'chrome'
