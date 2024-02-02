@@ -1,10 +1,10 @@
-import DEFAULTSEGMENT from "./common/DefaultSegment"
+import DEFAULTSEGMENT from "../../common/DefaultSegment"
 import type {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   SegmentInfo,
   MutedVodSegment,
   ShouldMakeListenerResponse,
-} from "./types"
+} from "../../types"
 
 /**
  * Looks for the muted segment closest to
@@ -71,14 +71,6 @@ export function performSkip(
   video.currentTime = endingOffset
 }
 
-// enum CreateListenerCodes {
-//   VideoBeyondNearest = 0,
-//   VideoBehindNearest = 1,
-//   CreatedListener = 2,
-// }
-
-// type CreateListenerResponse = [CreateListenerCodes, NodeJS.Timeout]
-
 /**
  * Creates a new listener for skipping.
  *
@@ -134,4 +126,16 @@ export function shouldCreateListener(segmentInfo: {
     }
   }
   return 0
+}
+
+/**
+ * Makes sure the page is currently on a valid playing vod.
+ * @param {vodUrl} vodUrl The url of the current page.
+ * @returns {string | undefined} The vod id from the page if valid. Undefined if not.
+ */
+export function isValidVod(vodUrl: string): string | undefined {
+  const validVodRegex = /https:\/\/www.twitch.tv\/videos\/\d{8,}/g
+  if (vodUrl.match(validVodRegex)) {
+    return vodUrl.split("/")[4]
+  }
 }
