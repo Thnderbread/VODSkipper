@@ -1,5 +1,6 @@
 import type { ApiResponse, MutedSegmentResponse } from "../types"
 
+// ! use environment variable
 const BASE_URL = "http://localhost:8000/vodData/"
 
 // TODO: Fix tests: optimal response, bad response, no response
@@ -40,10 +41,13 @@ export async function fetchVodData(
     if ((error as Error).name === "AbortError") {
       console.error("Request ran too long, aborting.")
       return [new Error("Server request timed out."), undefined]
-    } else if ((error as Error).message === "Failed to fetch") {
+      // Check for TypeError to generalize across browsers.
+      // TypeError, in most cases, denotes bad or failed req to server.
+    } else if ((error as Error).name === "TypeError") {
       console.error("Couldn't contact server.")
       return [new Error("Couldn't contact server."), undefined]
     }
+    console.error(`Uncaught error: ${error}`)
   }
   return [new Error("Unexpected error occurred."), undefined]
 }

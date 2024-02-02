@@ -12,10 +12,11 @@ import {
   StatusMessage,
 } from "../types"
 import {
+  isValidVod,
   createListener,
   shouldCreateListener,
   findNearestMutedSegment,
-} from "../functions"
+} from "./utils/utils"
 
 const initialState: State = {
   error: "",
@@ -29,17 +30,18 @@ const ContentScript: React.FC = () => {
   const [state, dispatch] = useReducer(reducer, initialState)
   const listener = useRef<NodeJS.Timeout | undefined>(undefined)
 
-  const vodID = document.location.pathname.split("/")[2]
+  const vodUrl = document.location.href
+  const vodID = isValidVod(vodUrl)
+
+  if (!vodID) {
+    dispatch({
+      type: "SET_ERROR",
+      payload: "No vod detected. VODSkipper not running.",
+    })
+    return null
+  }
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const video = document.querySelector("video")!
-
-  // if (!vodID || !vodID.match(/{8,10}/)) {
-  //   dispatch({
-  //     type: "SET_ERROR",
-  //     payload: "No vod detected. VODSkipper not running.",
-  //   })
-  //   return null
-  // }
 
   const seekedHandler = (): void => {
     if (state.mutedSegments.length > 0) {
