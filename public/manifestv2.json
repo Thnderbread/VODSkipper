@@ -7,7 +7,7 @@
   "version": "0.0.1",
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["https://www.twitch.tv/videos/*"],
       "run_at": "document_idle",  
       "js": ["./contentScript/index.js"],
       "css": ["./style.css"]
@@ -21,9 +21,9 @@
     "default_area": "navbar",
     "default_popup": "./popup/index.html",
     "default_title": "VODSkipper",
-    "default_icon": "icon-72x72.png"
+    "default_icon": "vodskipper-72.png"
   },
-  "permissions": ["activeTab", "tabs", "cookies", "storage", "scripting"],
+  "permissions": ["activeTab", "tabs","storage"],
   "icons": {
     "72": "vodskipper-72.png",
     "96": "vodskipper-96.png",
