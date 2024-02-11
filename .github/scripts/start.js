@@ -29,12 +29,13 @@ async function startBrowser(browserName) {
       ? {
         browserName,
         'moz:firefoxOptions': {
-          args: ['-start-debugger-server', '6080'],
+          args: ['-start-debugger-server', '6080', ''],
           prefs: {
             'devtools.debugger.remote-enabled': true,
             'dom.disable_open_during_load': false,
             'devtools.chrome.enabled': true,
-          }
+          },
+          // binary: path.join('C:', 'Program Files', 'Firefox Developer Edition', 'firefox.exe')
         }
       } : { browserName }
   const browser = await remote({
@@ -42,10 +43,10 @@ async function startBrowser(browserName) {
     capabilities
   })
 
-  const vodUrl = 'https://www.twitch.tv/videos/2045617286'
+  const vodUrl = 'https://www.twitch.tv/videos/1409109247'
 
   const debuggingUrls = {
-    "edge": 'edge://extensions/?q=',
+    "edge": 'edge://extensions/',
     "chrome": 'chrome://extensions/',
     "firefox": 'about:debugging#/runtime/this-firefox'
   }

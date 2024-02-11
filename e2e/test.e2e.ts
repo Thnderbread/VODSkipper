@@ -1,15 +1,34 @@
 import { browser, $$, $, expect } from "@wdio/globals"
 import type { Capabilities } from "@wdio/types"
 
-// changed from Capabilities.Capabilities
 const isFirefox =
-  (browser.capabilities as Capabilities.BrowserStackCapabilities)
-    .browserName === "firefox"
+  (browser.capabilities as WebdriverIO.Capabilities).browserName === "firefox"
+
+const mutedVodID = "1409109247"
+const unmutedVodID = "2050655749"
+
+const mutedVodUrl = `https://www.twitch.tv/videos/${mutedVodID}`
+const unmutedVodUrl = `https://www.twitch.tv/videos/${unmutedVodID}`
 
 describe("Web Extension e2e test", () => {
   it("should have injected the component from the content script", async () => {
-    await browser.url("https://google.com")
-    await expect($$("#extension-root")).toBeElementsArrayOfSize(0)
+    await browser.openExtensionPopup("VodSkipper")
+    const headerEl = await $("h1")
+    const messageEl = await $("p")
+
+    const headerText = await headerEl.getText()
+    const initialMessage = await messageEl.getText()
+
+    await expect(headerText).toMatch("VODSkipper")
+    await expect(initialMessage).toMatch("Loading...")
+
+    await new Promise(r => setTimeout(r, 2000))
+
+    const regularMessage = await messageEl.getText()
+
+    await expect(regularMessage).toMatch(
+      "No vod detected. VODSkipper not running",
+    )
   })
 
   // it("can get cat facts", async () => {

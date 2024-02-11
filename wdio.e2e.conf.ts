@@ -1,9 +1,9 @@
-import path from "node:path"
 import url from "node:url"
+import path from "node:path"
 import fs from "node:fs/promises"
 
 import { browser } from "@wdio/globals"
-import type { Options, Capabilities } from "@wdio/types"
+import type { Options } from "@wdio/types"
 
 import pkg from "./package.json" assert { type: "json" }
 import { config as baseConfig } from "./wdio.conf.js"
@@ -24,33 +24,53 @@ async function openExtensionPopup(
   extensionName: string,
   popupUrl = "index.html",
 ) {
-  // changed from Capabilities.Capabilities
-  if (
-    (this.capabilities as Capabilities.BrowserStackCapabilities).browserName !==
-    "chrome"
-  ) {
-    throw new Error("This command only works with Chrome")
-  }
-  await this.url("chrome://extensions/")
+  const browserName = (this.capabilities as WebdriverIO.Capabilities)
+    .browserName
 
-  const extensions = await this.$$(">>> extensions-item")
-  const extension = await extensions.find(
-    async ext => (await ext.$("#name").getText()) === extensionName,
-  )
+  if (browserName === "chrome") {
+    await this.url("chrome://extensions/")
 
-  if (!extension) {
-    const installedExtensions = await extensions.map(ext =>
-      ext.$("#name").getText(),
+    // The method outlined here: https://webdriver.io/docs/extension-testing/web-extensions/#chrome
+    // did not work when initially attempted. Since vodskipper is the only extension installed during
+    // tests, went with this workaround instead.
+    const extensionsManager = await this.$("extensions-manager")
+    const extensionItemList = await extensionsManager.shadow$(
+      "extensions-item-list",
     )
-    throw new Error(
-      `Couldn't find extension "${extensionName}", available installed extensions are "${installedExtensions.join(
-        '", "',
-      )}"`,
-    )
-  }
+    const extensionItem = await extensionItemList.shadow$("extensions-item")
+    const extId = await extensionItem.getAttribute("id")
 
-  const extId = await extension.getAttribute("id")
-  await this.url(`chrome-extension://${extId}/popup/${popupUrl}`)
+    if (!extId) {
+      throw new Error("Couldn't find extension id.")
+    }
+    await this.url(`chrome-extension://${extId}/popup/${popupUrl}`)
+  } else if (browserName === "firefox") {
+    await this.url("about:debugging#/runtime/this-firefox")
+    // Give a second for stuff to load
+    await new Promise(r => setTimeout(r, 2000))
+
+    const extensions = await this.$$(`span=${extensionName}`)
+    const extension: WebdriverIO.Element = await extensions.find(
+      async ext => (await ext.getText()) === extensionName,
+    )
+
+    if (!extension) {
+      throw new Error("Couldn't find the extension.")
+    }
+
+    const parent = await extension.$("..")
+    const extIdContainer = await parent.$("dt=Internal UUID")
+    const extIdParent = await extIdContainer.$("..")
+    const extIdRaw = await extIdParent.$("dd")
+    const extId = await extIdRaw.getText()
+
+    if (!extId) {
+      throw new Error("Couldn't find the extension id.")
+    }
+    await this.url(`moz-extension://${extId}/popup/${popupUrl}`)
+  } else {
+    throw new Error("This command only works for Chrome and Firefox.")
+  }
 }
 
 declare global {
@@ -75,15 +95,13 @@ export const config: Options.Testrunner = {
     {
       browserName: "firefox",
       "moz:firefoxOptions": {
-        args: ["-headless"],
+        // args: ["-headless"],
       },
     },
   ],
   before: async capabilities => {
     browser.addCommand("openExtensionPopup", openExtensionPopup)
-    // changed from Capabilities.Capabilities
-    const browserName = (capabilities as Capabilities.BrowserStackCapabilities)
-      .browserName
+    const browserName = (capabilities as WebdriverIO.Capabilities).browserName
 
     if (browserName === "firefox") {
       const extension = await fs.readFile(firefoxExtensionPath)
