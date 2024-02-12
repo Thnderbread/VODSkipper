@@ -1,4 +1,7 @@
+import path from "path"
 import type { Options } from "@wdio/types"
+import pkg from "./package.json" assert { type: "json" }
+import fs from "fs/promises"
 
 export const config: Options.Testrunner = {
   //
@@ -98,7 +101,19 @@ export const config: Options.Testrunner = {
   // Services take over a specific job you don't want to take care of. They enhance
   // your test setup with almost no effort. Unlike plugins, they don't add new
   // commands. Instead, they hook themselves up into the test process.
-  services: [],
+  services: [
+    [
+      "firefox-profile",
+      {
+        // trying to optimize firefox performance a bit
+        extensions: [path.join(`web-extension-firefox-v${pkg.version}.xpi`)],
+        "xpinstall.signatures.required": false,
+        "browser.tab.animate": false,
+        "webgl.disabled": false,
+        "browser.startup.homepage": "https://google.com",
+      },
+    ],
+  ],
 
   // Framework you want to run your specs with.
   // The following are supported: Mocha, Jasmine, and Cucumber
@@ -180,8 +195,18 @@ export const config: Options.Testrunner = {
    * @param {Array.<String>} specs        List of spec file paths that are to be run
    * @param {Object}         browser      instance of created browser/device session
    */
-  // before: function (capabilities, specs) {
-  // },
+  before: async capabilities => {
+    const firefoxExtensionPath = path.resolve(
+      __dirname,
+      `web-extension-firefox-v${pkg.version}.xpi`,
+    )
+
+    const browserName = (capabilities as WebdriverIO.Capabilities).browserName
+    if (browserName === "firefox") {
+      const extension = await fs.readFile(firefoxExtensionPath)
+      await browser.installAddOn(extension.toString("base64"), true)
+    }
+  },
   /**
    * Runs before a WebdriverIO command gets executed.
    * @param {String} commandName hook command name
