@@ -43,7 +43,7 @@ async function startBrowser(browserName) {
     capabilities
   })
 
-  const vodUrl = 'https://www.twitch.tv/videos/1409109247'
+  const vodUrl = 'https://www.twitch.tv/videos/1780240732'
 
   const debuggingUrls = {
     "edge": 'edge://extensions/',
