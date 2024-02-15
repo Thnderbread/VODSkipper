@@ -123,10 +123,12 @@ export const config: Options.Testrunner = {
         // trying to optimize performance a bit
         // https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
         args: [
+          "--disable-gpu",
           "--headless=new",
           "--disable-audio-output",
           "--disable-default-apps",
           "--no-default-browser-check",
+          "--disable-application-cache",
         ],
         extensions: [chromeExtension],
       },
