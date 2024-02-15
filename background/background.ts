@@ -1,39 +1,23 @@
 import browser from "webextension-polyfill"
 import { fetchVodData } from "./fetchVodData"
 import type { GetDataMessage, ResponseCallback } from "../types"
-import {
-  cacheSegments,
-  retrieveFromSessionStorage,
-} from "./utils/storageHandler"
 
 async function handleContentScriptMessage(
-  { action, vodID }: GetDataMessage,
+  { vodID }: GetDataMessage,
   response: ResponseCallback,
 ): Promise<boolean | undefined> {
-  if (action === "getData") {
-    if (typeof vodID !== "string") {
-      response({ error: new TypeError("Invalid data received") })
+  if (typeof vodID !== "string") {
+    response({ error: new TypeError("Invalid data received") })
+    return true
+  } else {
+    const [error, segments] = await fetchVodData(vodID)
+
+    if (error !== null) {
+      response({ error: error.message })
       return true
     } else {
-      const cached = await retrieveFromSessionStorage("vodskipper")
-
-      if (cached && cached[vodID]) {
-        response({ data: cached[vodID], error: null })
-        return true
-      }
-
-      const [error, segments] = await fetchVodData(vodID)
-
-      if (error !== null) {
-        response({ error: error.message })
-        return true
-      } else {
-        // Segments is never undefined here
-        // since those cases store an error.
-        await cacheSegments(vodID, segments!)
-        response({ data: segments, error: null })
-        return true
-      }
+      response({ data: segments, error: null })
+      return true
     }
   }
 }

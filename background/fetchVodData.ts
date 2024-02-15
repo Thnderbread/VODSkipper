@@ -1,11 +1,12 @@
-import type { ApiResponse, MutedSegmentResponse } from "../types"
+import { type MutedSegmentResponse } from "../types"
+import { cacheSegments, checkCache } from "./utils/cacheHandler"
 
 // ! use environment variable
-const BASE_URL = "http://localhost:8000/vodData/"
+const BASE_URL = "http://localhost:8000/vods/muted/"
 
 /**
  * Given a vodID, attempt to retrieve the VOD's muted segments data.
- *
+ * Checks the service worker cache before hitting the api.
  * @param {string} vodID String of the vod's id.
  * @returns {MutedSegmentResponse} A two-element tuple. The first element is an error or null,
  * the second element is the formatted vod segment or undefined.
@@ -13,29 +14,43 @@ const BASE_URL = "http://localhost:8000/vodData/"
 export async function fetchVodData(
   vodID: string,
 ): Promise<MutedSegmentResponse> {
+  const requestTimeoutDelay = 5000
+  const endpoint = BASE_URL + vodID
   const controller = new AbortController()
+
+  const cachedResponse = await checkCache(vodID)
+
+  if (cachedResponse) {
+    return [null, cachedResponse]
+  }
+
   const requestTimeout = setTimeout(() => {
     controller.abort()
-  }, 5000)
+  }, requestTimeoutDelay)
   try {
-    const endpoint = BASE_URL + vodID
     const response = await fetch(endpoint, { signal: controller.signal })
-    if (!response.ok) {
-      console.error(`Code: ${response.status} | Text: ${response.statusText}`)
+
+    // 404 responses mean there's no segments for the given vod.
+    // These can be cached to avoid hitting the server.
+    if (response.ok || response.status === 404) {
+      const data = await response.json()
+      cacheSegments({ [vodID]: data.segments ?? [] })
+      clearTimeout(requestTimeout)
+      return [null, data.segments]
+    } else {
       return [new Error("Something went wrong with the server."), undefined]
     }
-
-    const data: ApiResponse = await response.json()
-    clearTimeout(requestTimeout)
-
-    return [null, data.segments]
   } catch (error: unknown) {
-    if ((error as Error).name === "AbortError") {
-      return [new Error("Server request timed out."), undefined]
-    } else if ((error as Error).name === "TypeError") {
-      return [new Error("Couldn't contact server."), undefined]
+    // idk switch just looked more legible here
+    switch ((error as Error).name) {
+      case "AbortError":
+        console.error(`Abortion: ${error}`)
+        return [new Error("Server request timed out."), undefined]
+      case "TypeError":
+        console.error(`Type error: ${error}`)
+        return [new Error("Couldn't contact server."), undefined]
+      default:
+        return [new Error("Unexpected error occurred."), undefined]
     }
-    console.error(`Uncaught error: ${error}`)
   }
-  return [new Error("Unexpected error occurred."), undefined]
 }

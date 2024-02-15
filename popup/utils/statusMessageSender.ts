@@ -1,26 +1,26 @@
 import browser from "webextension-polyfill"
 import type { StatusMessageResponse } from "../../types"
 
-async function sendStatusMessage(tab: browser.Tabs.Tab): Promise<string> {
+async function sendStatusMessage(tabId: number): Promise<string> {
   // Give a couple seconds for content script to complete operations
-  await new Promise(resolve => setTimeout(resolve, 2000))
+  await new Promise(resolve => setTimeout(resolve, 1500))
 
-  if (tab && tab.id) {
-    // Get information about the fetch operation -
+  // Get information about the fetch operation
+  try {
     const response: StatusMessageResponse = await browser.tabs.sendMessage(
-      tab.id,
+      tabId,
       { action: "getStatus" },
     )
     if (Object.hasOwnProperty.call(response, "error") && response.error) {
-      // TODO: Check if response.error is disabled extension, abort error, or any other specifics
       return response.error
     } else if (response.segmentLength === 0) {
       return "No muted segments for this vod."
     } else {
       return `This vod has ${response.segmentLength} muted segments.`
     }
-  } else {
-    return "No vod detected. VODSkipper not running."
+  } catch (error) {
+    console.error(error)
+    return "Error. Check permissions or try refreshing."
   }
 }
 

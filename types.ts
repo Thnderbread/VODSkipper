@@ -1,42 +1,61 @@
 export type ResponseCallback = <T>(data: T) => void
 
-export type StorageArea = "local" | "session" | undefined
-
-export type StoredVodSegments = Record<string, MutedVodSegment[]>
-
-/**
- * Tuple that either contains an error and undefined,
- * Or null as the error and an array containing data
- * on the vod's muted segments.
- */
 export type ShouldMakeListenerResponse = DecisionCodes
 
+/**
+ * @description
+ * The response from contacting the api for segments.
+ * Represented as a two element tuple where the first
+ * element is any error that occurred or null, and the
+ * second element is the vod segment array. The second
+ * element can be empty, and is only ever undefined if
+ * an error occurs.
+ */
 export type MutedSegmentResponse = [Error | null, MutedVodSegment[]?]
 
+/**
+ * Represents what is cached in the browser's session storage.
+ * Key is the vod's id.
+ */
+export type CacheObject = Record<string, MutedVodSegment[]>
+
+/**
+ * Whether or not a listener should be created.
+ */
 export enum DecisionCodes {
   Create = 0,
-  NoDataGiven = 1,
-  NoMutedSegments = 2,
-  NearestIsDefault = 3,
+  NoMutedSegments = 1,
+  NearestIsDefault = 2,
 }
 
+/**
+ * Message to the content script
+ * from the popup checking for any errors
+ * that occurred during segment data fetching.
+ */
 export interface StatusMessage {
   data: "getStatus"
 }
 
+/**
+ * Response from the content script
+ * to the popup checking for any errors
+ * that occurred during segment data fetching.
+ */
 export interface StatusMessageResponse {
   segmentLength: number | null
   error: string | null
 }
 
-export interface SessionStorageSettings {
-  vodskipper: Record<string, MutedVodSegment[]>
-}
-
+/**
+ * Object that is passed into the
+ * shouldCreateListener function.
+ */
 export interface SegmentInfo {
   nearestSegment: MutedVodSegment
   mutedSegments: MutedVodSegment[]
 }
+
 /**
  * Response from the proxy api.
  */
@@ -44,28 +63,22 @@ export interface ApiResponse {
   segments: MutedVodSegment[]
 }
 
+/**
+ * Message to the background script
+ * from the content script for segment data.
+ */
 export interface GetDataMessage {
   action: "getData"
   vodID: string
 }
 
-export interface NoDataMessage {
-  action: "getData"
-  data: []
-}
-
+/**
+ * Response from the background script
+ * to the content script for segment data.
+ */
 export interface GetDataResponse {
   data: MutedVodSegment[]
   error: string | null
-}
-
-/**
- * An object denoting a muted segment
- * as returned by Twitch.
- */
-export interface VodSegment {
-  offset: number
-  duration: number
 }
 
 /**
@@ -91,6 +104,10 @@ export interface DefaultVodSegment extends MutedVodSegment {
 
 export interface State {
   /**
+   * Any Errors that occur in the BG script.
+   */
+  error: string
+  /**
    * The nearest muted segment to be skipped.
    */
   nearestSegment: MutedVodSegment
@@ -98,10 +115,6 @@ export interface State {
    * All of the muted segments for the vod.
    */
   mutedSegments: MutedVodSegment[]
-  /**
-   * Any Errors that occur in the BG script.
-   */
-  error: string
 }
 
 // TODO: Set error payload to be specific strings.

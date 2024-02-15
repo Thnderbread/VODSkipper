@@ -29,36 +29,29 @@ const ContentScript: React.FC = () => {
   const [state, dispatch] = useReducer(reducer, initialState)
   const listener = useRef<NodeJS.Timeout | undefined>(undefined)
 
-  const vodUrl = document.location.href
-  const vodID = isValidVod(vodUrl)
+  const vodID = isValidVod(document.location.href)
+  const video = document.querySelector("video")
 
-  if (!vodID) {
-    dispatch({
-      type: "SET_ERROR",
-      payload: "No vod detected. VODSkipper not running.",
-    })
+  if (!vodID || !video) {
+    dispatch({ type: "SET_ERROR", payload: "No vod detected." })
     return null
   }
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const video = document.querySelector("video")!
 
   const seekedHandler = (): void => {
-    if (state.mutedSegments.length > 0) {
-      clearTimeout(listener.current)
-      const nearest = findNearestMutedSegment(video, state.mutedSegments)
-      dispatch({ type: "SET_NEAREST", payload: nearest })
-    }
+    clearTimeout(listener.current)
+    const nearest = findNearestMutedSegment(
+      video.currentTime,
+      state.mutedSegments,
+    )
+    dispatch({ type: "SET_NEAREST", payload: nearest })
   }
 
   const playingHandler = (): void => {
-    const { nearestSegment, mutedSegments } = state
-    if (
-      shouldCreateListener({ nearestSegment, mutedSegments }) ===
-      DecisionCodes.Create
-    ) {
+    const { nearestSegment } = state
+    if (shouldCreateListener({ nearestSegment }) === DecisionCodes.Create) {
       listener.current = createListener(
-        state.nearestSegment.startingOffset,
-        state.nearestSegment.endingOffset,
+        nearestSegment.startingOffset,
+        nearestSegment.endingOffset,
         video,
       )
     }
@@ -88,10 +81,7 @@ const ContentScript: React.FC = () => {
   useEffect(() => {
     void (async () => {
       const { data, error }: GetDataResponse =
-        await browser.runtime.sendMessage({
-          action: "getData",
-          vodID,
-        })
+        await browser.runtime.sendMessage({ action: "getData", vodID })
       if (error !== null) {
         dispatch({ type: "SET_ERROR", payload: error })
         setLoaded(true)
@@ -103,10 +93,6 @@ const ContentScript: React.FC = () => {
       } else {
         console.log(`Found ${data.length} muted segments for vod ${vodID}.`)
         dispatch({ type: "SET_MUTED_SEGMENTS", payload: data })
-        dispatch({
-          type: "SET_NEAREST",
-          payload: findNearestMutedSegment(video, data),
-        })
         setLoaded(true)
       }
     })()
@@ -118,28 +104,16 @@ const ContentScript: React.FC = () => {
 
   // finished loading useEffect
   useEffect(() => {
-    const { nearestSegment, mutedSegments } = state
-    // TODO: Revisit this. Will the listener not be set up in cases where all muted segments have been passed?
-    // if (
-    //   shouldCreateListener({ nearestSegment, mutedSegments }) !==
-    //   DecisionCodes.Create
-    // ) {
-    //   return
-    // }
-    /**
-     * The only way this listener is not set up
-     * is if the extension is disabled - In which case
-     * This is not hit anyway.
-     */
+    const { mutedSegments } = state
     if (loaded) {
+      // Setting up this listener here
+      // so that it's only reading freshly
+      // processed data
       const statusMessageListener = (
         msg: StatusMessage,
         sender: browser.Runtime.MessageSender,
         response: ResponseCallback,
       ): void => {
-        // ! Remove this (comments) - unless re-adding attempts mechanism
-        // Not checking for attempts because
-        // it should be 0 by this point
         if (state.error) {
           response({ error: state.error })
           return
@@ -149,9 +123,16 @@ const ContentScript: React.FC = () => {
         }
       }
 
+      /**
+       * If this vod has no muted segments, then no listeners
+       * should be created. Otherwise, there can be a case where
+       * the page loads past all segments, but the user seeks
+       * to segments earlier in the vod. Checking for === create
+       * might not create listeners in this case.
+       */
       if (
-        shouldCreateListener({ nearestSegment, mutedSegments }) ===
-        DecisionCodes.Create
+        shouldCreateListener({ mutedSegments }) !==
+        DecisionCodes.NoMutedSegments
       ) {
         setupVideoListeners()
       }
@@ -164,7 +145,7 @@ const ContentScript: React.FC = () => {
   }, [loaded])
 
   // Re-establish the playing handler when
-  // A new nearest segment is set
+  // A new nearest segment is set by the seek handler
   useEffect(() => {
     const { nearestSegment } = state
     if (shouldCreateListener({ nearestSegment }) !== DecisionCodes.Create) {
