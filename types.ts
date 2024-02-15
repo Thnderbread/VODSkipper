@@ -11,8 +11,6 @@ export type StoredVodSegments = Record<string, MutedVodSegment[]>
  */
 export type ShouldMakeListenerResponse = DecisionCodes
 
-export type PopupMessage = SetEnabledMessage | CheckEnabledMessage
-
 export type MutedSegmentResponse = [Error | null, MutedVodSegment[]?]
 
 export enum DecisionCodes {
@@ -31,18 +29,8 @@ export interface StatusMessageResponse {
   error: string | null
 }
 
-export interface LocalStorageSettings {
-  vodskipper: {
-    enabled: boolean
-  }
-}
-
 export interface SessionStorageSettings {
   vodskipper: Record<string, MutedVodSegment[]>
-}
-
-export interface VodSkipperSettings {
-  enabled: boolean
 }
 
 export interface SegmentInfo {
@@ -54,16 +42,6 @@ export interface SegmentInfo {
  */
 export interface ApiResponse {
   segments: MutedVodSegment[]
-}
-
-export interface SetEnabledMessage {
-  action: "setEnabled"
-  data: boolean
-}
-
-interface CheckEnabledMessage {
-  action: "checkEnabled"
-  data: boolean
 }
 
 export interface GetDataMessage {
@@ -113,10 +91,6 @@ export interface DefaultVodSegment extends MutedVodSegment {
 
 export interface State {
   /**
-   * Whether the extension is currently enabled.
-   */
-  enabled: boolean
-  /**
    * The nearest muted segment to be skipped.
    */
   nearestSegment: MutedVodSegment
@@ -133,6 +107,5 @@ export interface State {
 // TODO: Set error payload to be specific strings.
 export type Action =
   | { type: "SET_ERROR"; payload: string }
-  | { type: "SET_ENABLED"; payload: boolean }
   | { type: "SET_NEAREST"; payload: MutedVodSegment }
   | { type: "SET_MUTED_SEGMENTS"; payload: MutedVodSegment[] }

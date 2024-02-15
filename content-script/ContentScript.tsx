@@ -20,7 +20,6 @@ import {
 
 const initialState: State = {
   error: "",
-  enabled: true,
   mutedSegments: [],
   nearestSegment: DEFAULTSEGMENT,
 }
@@ -88,41 +87,20 @@ const ContentScript: React.FC = () => {
   // On mount useEffect
   useEffect(() => {
     void (async () => {
-      // ! Remove this
-      console.log("Hello, content script executing!")
       const { data, error }: GetDataResponse =
         await browser.runtime.sendMessage({
           action: "getData",
           vodID,
         })
-      // ! Remove this
-      console.log(
-        `Finished talking to bg script! ${JSON.stringify(
-          data,
-        )} | ${JSON.stringify(error)}`,
-      )
       if (error !== null) {
-        // ! Remove this
-        console.warn(`Error is not null: ${error}`)
         dispatch({ type: "SET_ERROR", payload: error })
         setLoaded(true)
         return
       } else if (data.length === 0) {
         // Returning if there's no data since
         // initial reducer state has dummy data
-        // ! Remove this
-        console.warn(
-          `Data.length is 0: ${data} | ${JSON.stringify(
-            data,
-          )}. | Error: ${error}`,
-        )
         setLoaded(true)
       } else {
-        // ! Remove this
-        console.log(
-          `Else block triggered (iife) - there are muted segments: ${data} | error: ${error}`,
-        )
-        // ! Remove this
         console.log(`Found ${data.length} muted segments for vod ${vodID}.`)
         dispatch({ type: "SET_MUTED_SEGMENTS", payload: data })
         dispatch({
@@ -132,8 +110,6 @@ const ContentScript: React.FC = () => {
         setLoaded(true)
       }
     })()
-    // ! Remove this
-    console.log("Out of the iife!")
 
     return () => {
       tearDownVideoListeners()
@@ -155,33 +131,19 @@ const ContentScript: React.FC = () => {
      * is if the extension is disabled - In which case
      * This is not hit anyway.
      */
-    if (loaded && state.enabled) {
+    if (loaded) {
       const statusMessageListener = (
         msg: StatusMessage,
         sender: browser.Runtime.MessageSender,
         response: ResponseCallback,
       ): void => {
-        // ! Remove this
-        console.log("Received message. trying to do stuff.")
-
         // ! Remove this (comments) - unless re-adding attempts mechanism
         // Not checking for attempts because
         // it should be 0 by this point
         if (state.error) {
-          // ! Remove this
-          console.log(
-            `Finished loading: ${loaded} but there's an error: ${state.error}`,
-          )
           response({ error: state.error })
           return
         } else {
-          // ! Remove this
-          console.log("Everything's fine. Returning length.")
-          console.log(
-            `And there's def no errors: "${state.error}" | "${JSON.stringify(
-              state.error,
-            )} | state: ${state} | ${JSON.stringify(state)}"`,
-          )
           response({ segmentLength: state.mutedSegments.length })
           return
         }
@@ -214,15 +176,6 @@ const ContentScript: React.FC = () => {
       video.removeEventListener("playing", playingHandler)
     }
   }, [state.nearestSegment])
-
-  // If extension is disabled at some point,
-  // Remove all listeners. Readd them when enabled
-  useEffect(() => {
-    tearDownVideoListeners()
-    if (state.enabled) {
-      setupVideoListeners()
-    }
-  }, [state.enabled])
 
   return null
 }

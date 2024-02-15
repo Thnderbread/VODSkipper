@@ -7,8 +7,6 @@ function reducer(state: State, action: Action) {
       return { ...state, nearestSegment: action.payload }
     case "SET_MUTED_SEGMENTS":
       return { ...state, mutedSegments: action.payload }
-    case "SET_ENABLED":
-      return { ...state, enabled: action.payload }
     case "SET_ERROR":
       return { ...state, error: action.payload }
     default:

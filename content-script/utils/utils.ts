@@ -64,10 +64,8 @@ export function calculateInterval(
  */
 export function performSkip(
   video: HTMLVideoElement,
-  startingOffset: number,
   endingOffset: number,
 ): void {
-  console.log(`Skipping from: ${startingOffset} to ${endingOffset}`)
   video.currentTime = endingOffset
 }
 
@@ -87,7 +85,7 @@ export function createListener(
 ): NodeJS.Timeout {
   const int = calculateInterval(video.currentTime, startingOffset)
   const listener = setTimeout(() => {
-    performSkip(video, startingOffset, endingOffset)
+    performSkip(video, endingOffset)
   }, int)
   return listener
 }

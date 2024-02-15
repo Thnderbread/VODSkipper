@@ -6,12 +6,11 @@ import sendStatusMessage from "./utils/statusMessageSender"
 const Popup = (): JSX.Element => {
   const [result, setResult] = useState("")
   // const [display, setDisplay] = useState("")
-  const [enabled, setEnabled] = useState(true)
   const [message, setMessage] = useState("Loading...")
+  browser.extension.getBackgroundPage()
 
-  // todo: content script will need a check to ensure it's not running content script stuff on a page w/o vod id.
-  // todo: CHECK content script error cases & write e2es? How to check enabled status of extension? Check firefox v?
-  // todo: Check if the extension id is the same on firefox since cors can be triggered.
+  // TODO: Refactoring.
+  // TODO: Fix session storage to use caches api.
   /**
    * TODO: Check whether shit is enabled
    * TODO: Check whether segments exist
@@ -27,10 +26,6 @@ const Popup = (): JSX.Element => {
    */
 
   useEffect(() => {
-    if (!enabled) {
-      return
-    }
-
     void (async () => {
       /**
        * Check result variable for saved
@@ -61,18 +56,6 @@ const Popup = (): JSX.Element => {
       setMessage(response)
     })()
   }, [])
-
-  useEffect(() => {
-    if (browser.runtime === undefined) {
-      setEnabled(false)
-    }
-  }, [browser.runtime])
-
-  useEffect(() => {
-    if (!enabled) {
-      setMessage("VODSkipper is currently disabled.")
-    }
-  }, [enabled])
 
   return (
     <div className="flex flex-col gap-4 p-4 shadow-sm bg-black bg-opacity-100 w-96">
