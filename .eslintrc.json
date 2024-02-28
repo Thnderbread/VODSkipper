@@ -22,6 +22,6 @@
                 "checksVoidReturn": false
             }
         ],
-        "typescript-eslint/no-base-to-string": "error"
+        "@typescript-eslint/no-base-to-string": "error"
     }
 }

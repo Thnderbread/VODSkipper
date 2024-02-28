@@ -4,8 +4,8 @@
     "useDefineForClassFields": false,
     "lib": [
       "DOM",
-      "DOM.Iterable",
       "ESNext",
+      "DOM.Iterable",
     ],
     "allowJs": false,
     "skipLibCheck": true,
@@ -23,6 +23,7 @@
     "types": [
       "node",
       "mocha",
+      "chrome",
       "expect-webdriverio",
       "@wdio/globals/types",
     ]
@@ -33,6 +34,7 @@
     "common",
     "types.ts",
     "background",
+    "test/fixtures",
     "content-script",
   ],
   "references": [

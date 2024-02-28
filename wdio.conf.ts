@@ -28,7 +28,14 @@ export const config: Options.Testrunner = {
   // then the current working directory is where your `package.json` resides, so `wdio`
   // will be called from there.
   //
-  specs: [],
+  specs: ["./test/specs/**/*.spec.ts"],
+  suites: {
+    content: ["./test/specs/content.spec.ts"],
+    background: ["./test/specs/background.cache.spec.ts"],
+    popupTimeout: ["./test/specs/popup.timeout.spec.ts"],
+    popupSegments: ["./test/specs/popup.segments.spec.ts"],
+    popupServerless: ["./test/specs/popup.serverless.spec.ts"],
+  },
   // Patterns to exclude.
   exclude: [],
   //
@@ -109,7 +116,8 @@ export const config: Options.Testrunner = {
         extensions: [path.join(`web-extension-firefox-v${pkg.version}.xpi`)],
         "xpinstall.signatures.required": false,
         "browser.tab.animate": false,
-        "webgl.disabled": false,
+        "browser.panorama.animate_zoom": false,
+        "webgl.disabled": true,
         "browser.startup.homepage": "https://google.com",
       },
     ],
