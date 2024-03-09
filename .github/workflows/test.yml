@@ -1,4 +1,4 @@
-name: 'Test'
+name: "Test"
 on: # rebuild any PRs and main branch changes
   pull_request:
   push:
@@ -10,11 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install
         run: npm ci
-      - name: Bundle
-        run: npm run bundle
       - name: Test
         run: npm run test
       - uses: actions/upload-artifact@v3
