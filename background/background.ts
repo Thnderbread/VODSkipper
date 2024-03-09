@@ -10,13 +10,13 @@ async function handleContentScriptMessage(
     response({ error: new TypeError("Invalid data received") })
     return true
   } else {
-    const [error, segments] = await fetchVodData(vodID)
+    const { success, error, data } = await fetchVodData(vodID)
 
-    if (error !== null) {
+    if (!success) {
       response({ error: error.message })
       return true
     } else {
-      response({ data: segments, error: null })
+      response({ data, error: null })
       return true
     }
   }

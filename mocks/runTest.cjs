@@ -1,7 +1,6 @@
 const { spawn } = require('node:child_process')
 const which = require('which')
 const path = require('path')
-const { writeFileSync, appendFileSync } = require('node:fs')
 
 function runTest(testCommand, server = null) {
   const npxPath = which.sync('npx')
@@ -14,7 +13,7 @@ function runTest(testCommand, server = null) {
 
   const logger = server?.logger ?? console
 
-  // sub is of type never if this isn't done, need my type hints
+  // sub is of type never if this isn't done
   if (!npxExecutable) throw new Error("Missing npx executable.")
 
   const wdioPrefix = '\u001b[90mwdio\u001b[0m'

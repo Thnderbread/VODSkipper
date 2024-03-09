@@ -1,8 +1,9 @@
 import { type MutedSegmentResponse } from "../types"
 import { cacheSegments, checkCache } from "./utils/cacheHandler"
 
-// ! use environment variable
-const BASE_URL = "http://localhost:8000/vods/muted/"
+const BASE_URL = import.meta.env.PROD
+  ? "https://api-vodskipper.koyeb.app/vods/muted/"
+  : "http://localhost:3100/vods/muted/"
 
 /**
  * Given a vodID, attempt to retrieve the VOD's muted segments data.
@@ -19,38 +20,65 @@ export async function fetchVodData(
   const controller = new AbortController()
 
   const cachedResponse = await checkCache(vodID)
-
-  if (cachedResponse) {
-    return [null, cachedResponse]
+  if (cachedResponse !== undefined) {
+    return { success: true, data: cachedResponse }
   }
 
   const requestTimeout = setTimeout(() => {
+    console.log("Request too long, aborting")
     controller.abort()
   }, requestTimeoutDelay)
   try {
     const response = await fetch(endpoint, { signal: controller.signal })
-
-    // 404 responses mean there's no segments for the given vod.
-    // These can be cached to avoid hitting the server.
-    if (response.ok || response.status === 404) {
-      const data = await response.json()
-      cacheSegments({ [vodID]: data.segments ?? [] })
+    /**
+     * 404 responses mean there's no segments for the given vod.
+     * These can be cached as empty arrays to avoid hitting the
+     * server.
+     */
+    if (response.ok) {
       clearTimeout(requestTimeout)
-      return [null, data.segments]
+      const data = await response.json()
+      await cacheSegments({ [vodID]: data.segments })
+      return {
+        success: true,
+        data: data.segments,
+      }
+    } else if (response.status === 404) {
+      clearTimeout(requestTimeout)
+      await cacheSegments({ [vodID]: [] })
+      return {
+        success: true,
+        data: [],
+      }
     } else {
-      return [new Error("Something went wrong with the server."), undefined]
+      /**
+       * Bad server response
+       */
+      return {
+        success: false,
+        error: new Error("Something went wrong with the server."),
+      }
     }
   } catch (error: unknown) {
-    // idk switch just looked more legible here
+    // used as the default case
+    let errorState = new Error("Unexpected error occurred.")
+    /**
+     * Client side error with the fetch operation
+     * Also, switch looked easier to read than if-else
+     */
     switch ((error as Error).name) {
       case "AbortError":
-        console.error(`Abortion: ${error}`)
-        return [new Error("Server request timed out."), undefined]
+        errorState = new Error("Server request timed out.")
+        break
       case "TypeError":
-        console.error(`Type error: ${error}`)
-        return [new Error("Couldn't contact server."), undefined]
+        errorState = new Error("Couldn't contact server.")
+        break
       default:
-        return [new Error("Unexpected error occurred."), undefined]
+        break
+    }
+    return {
+      success: false,
+      error: errorState,
     }
   }
 }

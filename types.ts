@@ -3,15 +3,19 @@ export type ResponseCallback = <T>(data: T) => void
 export type ShouldMakeListenerResponse = DecisionCodes
 
 /**
- * @description
  * The response from contacting the api for segments.
- * Represented as a two element tuple where the first
- * element is any error that occurred or null, and the
- * second element is the vod segment array. The second
- * element can be empty, and is only ever undefined if
- * an error occurs.
  */
-export type MutedSegmentResponse = [Error | null, MutedVodSegment[]?]
+export type MutedSegmentResponse =
+  | {
+      error?: never
+      success: true
+      data: MutedVodSegment[]
+    }
+  | {
+      error: Error
+      success: false
+      data?: never
+    }
 
 /**
  * Represents what is cached in the browser's session storage.

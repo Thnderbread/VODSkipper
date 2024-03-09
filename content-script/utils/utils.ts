@@ -39,7 +39,7 @@ export const findNearestMutedSegment = (
  * when to trigger the ```performSkip``` function.
  * 
  * @param {number} startingOffset The initial time offset (e.g. ```video.currentTime```).
- * @param {number} endingOffset The target time offset when an action (e.g. ```performSkip```) should occur.
+ * @param {number} endingOffset The target time offset when an action (i.e. ```performSkip```) should occur.
  * @returns {number} The calculated interval in milliseconds, rounded up to
 the nearest whole number. Will return a default interval of 1000 ms if the result is 0 or less.
  */
@@ -127,6 +127,7 @@ export function isValidVod(vodUrl: string): string | false {
   return (
     typeof vodUrl === "string" &&
     validVodRegex.test(vodUrl) &&
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     vodUrl.match(vodIdRegex)![0]
   )
 }

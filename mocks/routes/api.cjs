@@ -20,7 +20,7 @@ module.exports = [
             if (segments) {
               res.status(200).json({ segments })
             } else {
-              res.sendStatus(204)
+              res.sendStatus(404)
             }
           },
         },

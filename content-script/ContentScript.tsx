@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import type React from "react"
 import reducer from "./reducer"
 import browser from "webextension-polyfill"
@@ -8,8 +7,8 @@ import {
   type State,
   type GetDataResponse,
   DecisionCodes,
-  ResponseCallback,
-  StatusMessage,
+  type StatusMessage,
+  type ResponseCallback,
 } from "../types"
 import {
   isValidVod,
@@ -32,7 +31,7 @@ const ContentScript: React.FC = () => {
   const vodID = isValidVod(document.location.href)
   const video = document.querySelector("video")
 
-  if (!vodID || !video) {
+  if (vodID === false || video === null) {
     dispatch({ type: "SET_ERROR", payload: "No vod detected." })
     return null
   }
@@ -85,10 +84,12 @@ const ContentScript: React.FC = () => {
       if (error !== null) {
         dispatch({ type: "SET_ERROR", payload: error })
         setLoaded(true)
-        return
       } else if (data.length === 0) {
-        // Returning if there's no data since
-        // initial reducer state has dummy data
+        /**
+         * Returning if there's no data
+         * since initial reducer state
+         * has dummy data
+         */
         setLoaded(true)
       } else {
         console.log(`Found ${data.length} muted segments for vod ${vodID}.`)
@@ -106,29 +107,29 @@ const ContentScript: React.FC = () => {
   useEffect(() => {
     const { mutedSegments } = state
     if (loaded) {
-      // Setting up this listener here
-      // so that it's only reading freshly
-      // processed data
+      /**
+       * Setting up this listener here so
+       * that it's only reading freshly
+       * processed data
+       */
       const statusMessageListener = (
         msg: StatusMessage,
         sender: browser.Runtime.MessageSender,
         response: ResponseCallback,
       ): void => {
-        if (state.error) {
+        if (state.error !== "") {
           response({ error: state.error })
-          return
         } else {
           response({ segmentLength: state.mutedSegments.length })
-          return
         }
       }
-
       /**
        * If this vod has no muted segments, then no listeners
-       * should be created. Otherwise, there can be a case where
-       * the page loads past all segments, but the user seeks
-       * to segments earlier in the vod. Checking for === create
-       * might not create listeners in this case.
+       * should be created. Otherwise, there could potentially be a
+       * case where the page loads past all segments, but
+       * the user seeks to segments earlier in the vod.
+       * Checking for "=== create" might not create listeners in
+       * this case.
        */
       if (
         shouldCreateListener({ mutedSegments }) !==
@@ -144,8 +145,10 @@ const ContentScript: React.FC = () => {
     }
   }, [loaded])
 
-  // Re-establish the playing handler when
-  // A new nearest segment is set by the seek handler
+  /**
+   * Re-establish the playing handler when
+   * A new nearest segment is set by the seek handler
+   */
   useEffect(() => {
     const { nearestSegment } = state
     if (shouldCreateListener({ nearestSegment }) !== DecisionCodes.Create) {

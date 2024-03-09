@@ -1,7 +1,6 @@
-import { type Action, type State } from "../types"
+import type { State, Action } from "../types"
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-function reducer(state: State, action: Action) {
+function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "SET_NEAREST":
       return { ...state, nearestSegment: action.payload }

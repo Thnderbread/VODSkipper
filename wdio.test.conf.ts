@@ -2,6 +2,18 @@ import url from "node:url"
 import path from "node:path"
 import fs from "node:fs/promises"
 
+/**
+ * Things that might not be needed:
+ * build folder
+ * src folder
+ * common folder
+ *
+ * delete stock icons from public
+ * delete vite & other unnecessary scripts / deps
+ * from package.json
+ *
+ */
+
 import { browser } from "@wdio/globals"
 import type { Options } from "@wdio/types"
 
@@ -47,10 +59,7 @@ async function openExtensionPopup(
     // Give a second for stuff to load
     await new Promise(r => setTimeout(r, 2000))
 
-    const extensions = await this.$$(`span=${extensionName}`)
-    const extension: WebdriverIO.Element = await extensions.find(
-      async ext => (await ext.getText()) === extensionName,
-    )
+    const extension = await this.$(`span=${extensionName}`)
 
     if (!extension) {
       throw new Error("Couldn't find the extension.")
@@ -59,8 +68,8 @@ async function openExtensionPopup(
     const parent = await extension.$("..")
     const extIdContainer = await parent.$("dt=Internal UUID")
     const extIdParent = await extIdContainer.$("..")
-    const extIdRaw = await extIdParent.$("dd")
-    const extId = await extIdRaw.getText()
+    const extIdElement = await extIdParent.$("dd")
+    const extId = await extIdElement.getText()
 
     if (!extId) {
       throw new Error("Couldn't find the extension id.")
@@ -71,9 +80,6 @@ async function openExtensionPopup(
   }
 }
 
-/**
- * * When running via start script, the page needs to be restarted in order for vodskipper to take effect. Why is this? Can it be addressed?
- */
 async function enableExtensionPermissions(
   this: WebdriverIO.Browser,
   extensionName: string,
@@ -104,21 +110,80 @@ async function enableExtensionPermissions(
   await toggleButton.click()
 }
 
+async function lowerVideoQuality(this: WebdriverIO.Browser) {
+  const settings = await this.$("[aria-label=Settings]")
+  await settings.click()
+
+  const quality = await this.$("div=Quality")
+  await quality.click()
+
+  const lowestOption = await this.$("div=160p")
+  await lowestOption.click()
+
+  await new Promise(resolve => setTimeout(resolve, 2000))
+}
+
+/**
+ * In chrome specifically, the vod page needs
+ * to be focused in order for messaging to work
+ * properly. This will focus the vod window and then
+ * reload the extension page, allowing the correct
+ * information to be displayed and tested. The function
+ * assumes that the page it's currently on the
+ * extension page.
+ *
+ * @param {string} vodUrl: The url of the vod to focus while the extension page is being reloaded
+ * @param {number} delay: The amount of time to wait before reloading the vodPage.
+ */
+async function setupExtensionPopup(
+  this: WebdriverIO.Browser,
+  vodUrl: string,
+  delay: number = 3000,
+) {
+  await this.execute(
+    (url, delay) => {
+      const extPage = window
+      const secondWindow = window.open(url, "_blank")
+
+      secondWindow?.focus()
+      setTimeout(() => {
+        extPage.location.reload()
+      }, delay)
+    },
+    vodUrl,
+    delay,
+  )
+}
+
 declare global {
   namespace WebdriverIO {
     interface Browser {
+      lowerVideoQuality: typeof lowerVideoQuality
       openExtensionPopup: typeof openExtensionPopup
+      setupExtensionPopup: typeof setupExtensionPopup
       enableExtensionPermissions: typeof enableExtensionPermissions
     }
   }
 }
 
+const spec = process.argv.slice(-1).pop()
+if (!spec) throw new Error("Missing spec.")
+
+const specFiles = {
+  CONTENT: ["./test/specs/content.spec.ts"],
+  BACKGROUND: ["./test/specs/background.spec.ts"],
+  TIMEOUT: ["./test/specs/popup.timeout.spec.ts"],
+  SEGMENTS: ["./test/specs/popup.segments.spec.ts"],
+  SERVERLESS: ["./test/specs/popup.serverless.spec.ts"],
+}
+
 export const config: Options.Testrunner = {
   ...baseConfig,
-  specs: ["./e2e/**/*.e2e.ts"],
+  specs: specFiles[spec],
   capabilities: [
     {
       browserName: "chrome",
+      // browserVersion: "122.0.6261.39",
       "goog:chromeOptions": {
         // trying to optimize performance a bit
         // https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
@@ -139,14 +204,17 @@ export const config: Options.Testrunner = {
         args: [
           "-headless",
           "-disable-gpu",
-          "disable-webgpu",
+          "-disable-audio",
+          "-disable-webgpu",
           "-disable-webrender",
         ],
       },
     },
   ],
   before: async capabilities => {
+    browser.addCommand("lowerVideoQuality", lowerVideoQuality)
     browser.addCommand("openExtensionPopup", openExtensionPopup)
+    browser.addCommand("setupExtensionPopup", setupExtensionPopup)
     browser.addCommand("enableExtensionPermissions", enableExtensionPermissions)
     const browserName = (capabilities as WebdriverIO.Capabilities).browserName
 

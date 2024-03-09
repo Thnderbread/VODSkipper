@@ -1,5 +1,5 @@
 import browser from "webextension-polyfill"
-import { CacheObject, MutedVodSegment } from "../../types"
+import type { CacheObject, MutedVodSegment } from "../../types"
 
 /**
  * Caches vod segments with the browser's session storage api.
