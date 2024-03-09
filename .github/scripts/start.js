@@ -17,11 +17,13 @@ async function startBrowser(browserName) {
   const capabilities = browserName === 'chrome'
     ? {
       browserName,
+      browserVersion: "122.0.6261.39",
       'goog:chromeOptions': {
         args: [
           `--load-extension=${path.join(__dirname, '..', '..', 'dist')}`,
           `--remote-debugging-port=9222`,
-          '--remote-debugging-host=0.0.0.0'
+          '--remote-debugging-host=0.0.0.0',
+          '--disable-audio'
         ]
       }
     }
@@ -54,6 +56,25 @@ async function startBrowser(browserName) {
   if (browserName === "firefox") {
     const extension = await fs.readFile(path.join(__dirname, '..', '..', `web-extension-firefox-v${pkg.version}.xpi`))
     await browser.installAddOn(extension.toString('base64'), true)
+
+    await browser.url("about:addons")
+    await new Promise(r => setTimeout(r, 1000))
+
+    const extensionButton = await browser.$("span=Extensions")
+    await extensionButton.click()
+
+    const ext = await browser.$(`a=VodSkipper`)
+    if (!ext) throw new Error("Couldn't find your extension.")
+    await ext.click()
+
+    const permissions = await browser.$("button=Permissions")
+    await permissions.click()
+
+    const permissionsContainer = await browser.$("#permission-0")
+    const permissionLabel = await permissionsContainer.shadow$("label")
+
+    const toggleButton = await permissionLabel.$("button")
+    await toggleButton.click()
   }
 
   await browser.execute((url) => {

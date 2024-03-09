@@ -24,6 +24,7 @@
       "node",
       "mocha",
       "chrome",
+      "vite/client",
       "expect-webdriverio",
       "@wdio/globals/types",
     ]

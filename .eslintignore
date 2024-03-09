@@ -1,11 +1,10 @@
-e2e
 dist
 vite.*
 wdio.*
 test
+mocks
 build
 assets
 .vscode
 .github
 *.config
-mocks
