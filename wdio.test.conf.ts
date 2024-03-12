@@ -183,7 +183,7 @@ export const config: Options.Testrunner = {
   capabilities: [
     {
       browserName: "chrome",
-      // browserVersion: "122.0.6261.39",
+      browserVersion: "stable",
       "goog:chromeOptions": {
         // trying to optimize performance a bit
         // https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md

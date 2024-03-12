@@ -17,7 +17,7 @@ async function startBrowser(browserName) {
   const capabilities = browserName === 'chrome'
     ? {
       browserName,
-      browserVersion: "122.0.6261.39",
+      browserVersion: "stable",
       'goog:chromeOptions': {
         args: [
           `--load-extension=${path.join(__dirname, '..', '..', 'dist')}`,
