@@ -11,14 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
       - name: Install
         run: npm ci
-      - name: Test
-        run: npm run test
+      - name: Bundle extension
+        run: npm run bundle-dev
       - uses: actions/upload-artifact@v3
         with:
           name: extension-files
           path: |
             ./*.crx
             ./*.zip
+      - name: Test
+        run: npm run test-ci
