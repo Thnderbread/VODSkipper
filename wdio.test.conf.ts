@@ -2,18 +2,6 @@ import url from "node:url"
 import path from "node:path"
 import fs from "node:fs/promises"
 
-/**
- * Things that might not be needed:
- * build folder
- * src folder
- * common folder
- *
- * delete stock icons from public
- * delete vite & other unnecessary scripts / deps
- * from package.json
- *
- */
-
 import { browser } from "@wdio/globals"
 import type { Options } from "@wdio/types"
 
@@ -171,8 +159,8 @@ if (!spec) throw new Error("Missing spec.")
 
 const specFiles = {
   CONTENT: ["./test/specs/content.spec.ts"],
-  BACKGROUND: ["./test/specs/background.spec.ts"],
   TIMEOUT: ["./test/specs/popup.timeout.spec.ts"],
+  BACKGROUND: ["./test/specs/background.spec.ts"],
   SEGMENTS: ["./test/specs/popup.segments.spec.ts"],
   SERVERLESS: ["./test/specs/popup.serverless.spec.ts"],
 }
@@ -183,7 +171,6 @@ export const config: Options.Testrunner = {
   capabilities: [
     {
       browserName: "chrome",
-      browserVersion: "stable",
       "goog:chromeOptions": {
         // trying to optimize performance a bit
         // https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
@@ -203,13 +190,7 @@ export const config: Options.Testrunner = {
     {
       browserName: "firefox",
       "moz:firefoxOptions": {
-        args: [
-          "-headless",
-          "-disable-gpu",
-          "-disable-audio",
-          "-disable-webgpu",
-          "-disable-webrender",
-        ],
+        args: ["-headless", "-disable-audio", "-disable-webrender"],
       },
     },
   ],
