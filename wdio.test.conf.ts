@@ -195,7 +195,7 @@ export const config: Options.Testrunner = {
           "--disable-default-apps",
           "--no-default-browser-check",
           "--disable-application-cache",
-          `--load-extension=${path.join(__dirname, "..", "..", "dist")}`,
+          `--load-extension=${path.join(__dirname, "dist")}`,
         ],
         extensions: [chromeExtension],
       },
