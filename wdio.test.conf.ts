@@ -31,14 +31,20 @@ async function openExtensionPopup(
   if (browserName === "chrome") {
     await this.url("chrome://extensions/")
 
+    console.log('"spec" Reporter:')
+    console.log(
+      `Path is valid: ${fs.existsSync(
+        path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
+      )}`,
+    )
+    console.log(
+      `The extension base64 string's length: ${chromeExtension.length}`,
+    )
+    console.log("Spec Files:")
+
     // The method outlined here: https://webdriver.io/docs/extension-testing/web-extensions/#chrome
     // did not work when initially attempted. Since vodskipper is the only extension installed during
     // tests, went with this workaround instead.
-    // const extensionsManager = await this.$("extensions-manager")
-    // const extensionItemList = await extensionsManager.shadow$(
-    //   "extensions-item-list",
-    // )
-    // const extensionItem = await extensionItemList.shadow$("extensions-item")
     const extensionItem = await this.$(">>> extensions-item")
     const extId = await extensionItem.getAttribute("id")
 
@@ -55,15 +61,14 @@ async function openExtensionPopup(
       throw new Error("Couldn't find the extension.")
     }
 
-    const parent = await extension.$("..")
-    const extIdContainer = await parent.$("dt=Internal UUID")
-    const extIdParent = await extIdContainer.$("..")
-    const extIdElement = await extIdParent.$("dd")
-    const extId = await extIdElement.getText()
+    const extId = await extension
+      .$("..")
+      .$("dt=Internal UUID")
+      .$("..")
+      .$("dd")
+      .getText()
 
-    if (!extId) {
-      throw new Error("Couldn't find the extension id.")
-    }
+    if (!extId) throw new Error("Couldn't find the extension id.")
     await this.url(`moz-extension://${extId}/popup/${popupUrl}`)
   } else {
     throw new Error("This command only works for Chrome and Firefox.")
@@ -181,7 +186,7 @@ export const config: Options.Testrunner = {
     {
       browserName: "firefox",
       "moz:firefoxOptions": {
-        args: ["-headless", "-disable-webrender"],
+        args: ["-headless"],
       },
     },
   ],
