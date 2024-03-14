@@ -180,7 +180,7 @@ export const config: Options.Testrunner = {
     {
       browserName: "firefox",
       "moz:firefoxOptions": {
-        args: ["-headless", "-disable-webrender"],
+        args: ["-headless"],
       },
     },
   ],
@@ -189,8 +189,8 @@ export const config: Options.Testrunner = {
     browser.addCommand("openExtensionPopup", openExtensionPopup)
     browser.addCommand("setupExtensionPopup", setupExtensionPopup)
     browser.addCommand("enableExtensionPermissions", enableExtensionPermissions)
-    const browserName = (capabilities as WebdriverIO.Capabilities).browserName
 
+    const browserName = (capabilities as WebdriverIO.Capabilities).browserName
     if (browserName === "firefox") {
       const extension = await readFile(firefoxExtensionPath)
       await browser.installAddOn(extension.toString("base64"), true)
