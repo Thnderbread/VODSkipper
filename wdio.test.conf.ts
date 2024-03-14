@@ -1,4 +1,4 @@
-import fs, { readFileSync } from "node:fs"
+import fs from "node:fs"
 import url from "node:url"
 import path from "node:path"
 import { readFile } from "node:fs/promises"
@@ -34,11 +34,12 @@ async function openExtensionPopup(
     // The method outlined here: https://webdriver.io/docs/extension-testing/web-extensions/#chrome
     // did not work when initially attempted. Since vodskipper is the only extension installed during
     // tests, went with this workaround instead.
-    const extensionsManager = await this.$("extensions-manager")
-    const extensionItemList = await extensionsManager.shadow$(
-      "extensions-item-list",
-    )
-    const extensionItem = await extensionItemList.shadow$("extensions-item")
+    // const extensionsManager = await this.$("extensions-manager")
+    // const extensionItemList = await extensionsManager.shadow$(
+    //   "extensions-item-list",
+    // )
+    // const extensionItem = await extensionItemList.shadow$("extensions-item")
+    const extensionItem = await this.$(">>> extensions-item")
     const extId = await extensionItem.getAttribute("id")
 
     if (!extId) throw new Error("Couldn't find extension id.")
@@ -180,7 +181,7 @@ export const config: Options.Testrunner = {
     {
       browserName: "firefox",
       "moz:firefoxOptions": {
-        args: ["-headless"],
+        args: ["-headless", "-disable-webrender"],
       },
     },
   ],
@@ -189,8 +190,8 @@ export const config: Options.Testrunner = {
     browser.addCommand("openExtensionPopup", openExtensionPopup)
     browser.addCommand("setupExtensionPopup", setupExtensionPopup)
     browser.addCommand("enableExtensionPermissions", enableExtensionPermissions)
-
     const browserName = (capabilities as WebdriverIO.Capabilities).browserName
+
     if (browserName === "firefox") {
       const extension = await readFile(firefoxExtensionPath)
       await browser.installAddOn(extension.toString("base64"), true)

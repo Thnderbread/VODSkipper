@@ -20,6 +20,7 @@ function runTest(testCommand, server = null) {
 
   return new Promise((resolve, reject) => {
     const sub = spawn(npxExecutable, args)
+    let inResultsBlock = false
 
     sub.on('error', (error) => {
       logger.error('Subprocess error: ', error)
@@ -27,10 +28,20 @@ function runTest(testCommand, server = null) {
     })
 
     sub.stdout.on('data', (data) => {
-      logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
+      if (data.includes('"spec" Reporter:')) {
+        inResultsBlock = true
+      }
+
+      if (inResultsBlock) {
+        logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
+      }
+
+      if (data.includes('Spec Files:')) {
+        inResultsBlock = false
+      }
     })
 
-    sub.stderr.on('data', (data) => {
+    sub.stderr.on('error', (data) => {
       logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
     })
 
