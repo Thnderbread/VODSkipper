@@ -173,25 +173,14 @@ export const config: Options.Testrunner = {
     {
       browserName: "chrome",
       "goog:chromeOptions": {
-        // trying to optimize performance a bit
-        // https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
-        args: [
-          "--no-sandbox",
-          "--disable-gpu",
-          "--headless=new",
-          "--disable-audio-output",
-          "--disable-default-apps",
-          "--no-default-browser-check",
-          "--disable-application-cache",
-          `--load-extension=${path.join(__dirname, "dist")}`,
-        ],
-        // extensions: [chromeExtension],
+        args: ["--no-sandbox", "--headless=new", "--disable-audio-output"],
+        extensions: [chromeExtension],
       },
     },
     {
       browserName: "firefox",
       "moz:firefoxOptions": {
-        args: ["-headless", "-disable-audio", "-disable-webrender"],
+        args: ["-headless", "-disable-webrender"],
       },
     },
   ],
