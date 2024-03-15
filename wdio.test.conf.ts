@@ -31,23 +31,15 @@ async function openExtensionPopup(
   if (browserName === "chrome") {
     await this.url("chrome://extensions/")
 
-    console.log('"spec" Reporter:')
-    console.log(
-      `Path is valid: ${fs.existsSync(
-        path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
-      )}`,
-    )
-    console.log(
-      `The extension base64 string's length: ${chromeExtension.length}`,
-    )
-    console.log("Spec Files:")
-
     // The method outlined here: https://webdriver.io/docs/extension-testing/web-extensions/#chrome
     // did not work when initially attempted. Since vodskipper is the only extension installed during
     // tests, went with this workaround instead.
     const extensionItem = await this.$(">>> extensions-item")
-    const extId = await extensionItem.getAttribute("id")
 
+    const screenshotPath = "./screenshot.png"
+    this.saveScreenshot(screenshotPath)
+
+    const extId = await extensionItem.getAttribute("id")
     if (!extId) throw new Error("Couldn't find extension id.")
     await this.url(`chrome-extension://${extId}/popup/${popupUrl}`)
   } else if (browserName === "firefox") {

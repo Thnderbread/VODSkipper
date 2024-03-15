@@ -24,6 +24,11 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
+          name: Screenshot
+          path: ./screenshot.png
+
+      - uses: actions/upload-artifact@v3
+        with:
           name: extension-files
           path: |
             ./*.crx
