@@ -12,7 +12,7 @@ Install dependencies via:
 npm install
 ```
 
-Start the dummy server:
+start the dummy server:
 
 ```sh
 npm run mocks
@@ -50,11 +50,11 @@ This script will run the build and start scripts sequentially.
 
 #### Load in Firefox
 
-To load the extension in Firefox go to `about:debugging#/runtime/this-firefox` or `Firefox > Preferences > Extensions & Themes > Debug Add-ons > Load Temporary Add-on...`. Here locate the `dist/` directory and open `manifestv2.json`
+To load the extension in Firefox, go to `about:debugging#/runtime/this-firefox` or `Firefox > Preferences > Extensions & Themes > Debug Add-ons > Load Temporary Add-on...`. Here, locate the `dist/` directory and open `manifestv2.json`.
 
 #### Load in Chrome
 
-To load the extensions in Google Chrome go to `chrome://extensions/` and click `Load unpacked`. Locate the dist directory and select `manifest.json`.
+To load the extension in Google Chrome, go to `chrome://extensions/` and click `Load unpacked`. Locate the dist directory and select `manifest.json`.
 
 ### Test
 
@@ -88,6 +88,6 @@ To re-bundle the extension with your changes.
 
 - popup/ - popup UI
 - background/ - Background script/Service worker
-- content-script/ - extension functionality (skipping)
+- content-script/ - extension functionality (actually skipping)
 
 If you have any questions, feel free to open an issue.

@@ -1,3 +1,14 @@
+version: 1.0.1
+
+image:
+  - Visual Studio 2020
+  - Ubuntu
+
+platform:
+  - x64
+
+configuration:
+
 branches:
   only:
     - main
