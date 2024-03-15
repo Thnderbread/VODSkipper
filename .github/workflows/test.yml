@@ -8,7 +8,7 @@ on: # rebuild any PRs and main branch changes
 
 jobs:
   test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
