@@ -19,11 +19,14 @@ jobs:
       - name: Bundle
         run: npm run bundle-dev
 
-      - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Install Xvfb & ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y xvfb ffmpeg
+
+      - name: Start Xvfb
+        run: Xvfb :99 -screen 0 1920x1080x24 &
 
       - name: Start Recording
-        run: ffmpeg -video_size 1920x1080 -framerate 30 -f x11grab -i :0.0 -c:v libx264 -preset ultrafast -tune zerolatency -crf 18 output.mp4 &
+        run: DISPLAY=:99 ffmpeg -video_size 1920x1080 -framerate 30 -f x11grab -i :99 -c:v libx264 -preset ultrafast -tune zerolatency -crf 18 output.mp4 &
 
       - name: Test
         run: npm run test
