@@ -25,14 +25,11 @@ jobs:
       - name: Start Xvfb
         run: Xvfb :99 -screen 0 1920x1080x24 &
 
-      - name: Start Recording
-        run: DISPLAY=:99 ffmpeg -video_size 1920x1080 -framerate 30 -f x11grab -i :99 -c:v libx264 -preset ultrafast -tune zerolatency -crf 18 output.mp4 &
-
       - name: Test
-        run: npm run test
-
-      - name: Stop Recording
-        run: pkill ffmpeg
+        run: |
+          DISPLAY=:99 ffmpeg -video_size 1920x1080 -framerate 30 -f x11grab -i :99 -c:v libx264 -preset ultrafast -tune zerolatency -crf 18 output.mp4 &
+          npm run test
+          pkill ffmpeg
 
       - uses: actions/upload-artifact@v3
         if: always()
