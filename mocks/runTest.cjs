@@ -28,31 +28,33 @@ function runTest(testCommand, server = null) {
     })
 
     sub.stdout.on('data', (data) => {
-      if (data.includes('"spec" Reporter:')) {
-        inResultsBlock = true
-      }
+      // if (data.includes('"spec" Reporter:')) {
+      //   inResultsBlock = true
+      // }
 
-      if (inResultsBlock) {
-        logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
-      }
+      // if (inResultsBlock) {
+      //   logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
+      // }
 
-      if (data.includes('Spec Files:')) {
-        inResultsBlock = false
-      }
+      // if (data.includes('Spec Files:')) {
+      //   inResultsBlock = false
+      // }
+      logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
     })
 
     sub.stderr.on('data', (data) => {
-      if (data.includes('"spec" Reporter:')) {
-        inResultsBlock = true
-      }
+      // if (data.includes('"spec" Reporter:')) {
+      //   inResultsBlock = true
+      // }
 
-      if (inResultsBlock) {
-        logger.error(`\b[${wdioPrefix}] ${data.toString()}`)
-      }
+      // if (inResultsBlock) {
+      //   logger.error(`\b[${wdioPrefix}] ${data.toString()}`)
+      // }
 
-      if (data.includes('Spec Files:')) {
-        inResultsBlock = false
-      }
+      // if (data.includes('Spec Files:')) {
+      //   inResultsBlock = false
+      // }
+      logger.error(`\b[${wdioPrefix}] ${data.toString()}`)
     })
 
     sub.on('close', (code) => {
