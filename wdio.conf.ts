@@ -1,10 +1,11 @@
 import path from "path"
+import url from "node:url"
+import fs from "fs/promises"
+import { readFileSync } from "fs"
 import type { Options } from "@wdio/types"
 import pkg from "./package.json" assert { type: "json" }
-import fs from "fs/promises"
 
 export const config: Options.Testrunner = {
-  //
   autoCompileOpts: {
     autoCompile: true,
     tsNodeOpts: {
@@ -60,7 +61,22 @@ export const config: Options.Testrunner = {
   // Sauce Labs platform configurator - a great tool to configure your capabilities:
   // https://saucelabs.com/platform/platform-configurator
   //
-  capabilities: [],
+  capabilities: [
+    {
+      browserName: "chrome",
+      "goog:chromeOptions": {
+        args: ["--no-sandbox", "--headless=new", "--disable-audio-output"],
+        extensions: [
+          readFileSync(
+            path.join(
+              url.fileURLToPath(new URL(".", import.meta.url)),
+              `web-extension-chrome-v${pkg.version}.crx`,
+            ),
+          ).toString("base64"),
+        ],
+      },
+    },
+  ],
   //
   // ===================
   // Test Configurations

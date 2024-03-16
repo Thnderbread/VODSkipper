@@ -23,7 +23,6 @@
     "bundle:firefox:crx": "cross-var crx pack ./dist -o ./web-extension-firefox-v$npm_package_version.crx",
     "bundle:chrome": "run-s bundle:chrome:*",
     "bundle:chrome:build": "run-s build:chrome",
-    "bundle:chrome:zip": "cross-var cross-zip ./dist ./web-extension-chrome-v$npm_package_version.zip",
     "bundle:chrome:crx": "cross-var crx pack ./dist -o ./web-extension-chrome-v$npm_package_version.crx",
     "compile": "run-s compile:*",
     "compile:tsc": "tsc",
