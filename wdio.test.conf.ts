@@ -171,7 +171,7 @@ export const config: Options.Testrunner = {
     {
       browserName: "chrome",
       "goog:chromeOptions": {
-        args: ["--no-sandbox", "--headless=new", "--disable-audio-output"],
+        args: ["--no-sandbox", "--disable-audio-output"],
         extensions: [chromeExtension],
       },
     },
