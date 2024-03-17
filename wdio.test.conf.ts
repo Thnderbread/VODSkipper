@@ -167,6 +167,7 @@ const specFiles = {
 export const config: Options.Testrunner = {
   ...baseConfig,
   specs: specFiles[spec],
+  logLevel: "trace",
   capabilities: [
     {
       browserName: "chrome",
