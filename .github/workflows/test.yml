@@ -19,8 +19,8 @@ jobs:
       - name: Bundle
         run: npm run bundle-dev
 
-      - name: Install Xvfb & ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y xvfb ffmpeg
+      - name: Install Xvfb & SimpleScreenRedcorder
+        run: sudo apt-get update && sudo apt-get install -y xvfb simplescreenrecorder
 
       - name: Start Xvfb
         run: |
@@ -29,9 +29,9 @@ jobs:
 
       - name: Test
         run: |
-          DISPLAY=:99 ffmpeg -video_size 1920x1080 -framerate 30 -f x11grab -i :99 -c:v libx264 -preset ultrafast -tune zerolatency -crf 18 output.mp4 &
+          simplescreenrecorder --start-recording --output-path=output.mp4
           npm run test
-          pkill ffmpeg
+          simplescreenrecorder --stop-recording
 
       - uses: actions/upload-artifact@v3
         if: always()
