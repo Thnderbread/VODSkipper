@@ -41,7 +41,7 @@ function runTest(testCommand, server = null) {
       }
     })
 
-    sub.stderr.on('data', (data) => {
+    sub.stderr.on('error', (data) => {
       if (data.includes('"spec" Reporter:')) {
         inResultsBlock = true
       }
