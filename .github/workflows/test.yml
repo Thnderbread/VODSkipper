@@ -19,25 +19,8 @@ jobs:
       - name: Bundle
         run: npm run bundle-dev
 
-      - name: Install Xvfb & SimpleScreenRedcorder
-        run: sudo apt-get update && sudo apt-get install -y xvfb simplescreenrecorder
-
-      - name: Start Xvfb
-        run: |
-          Xvfb :99 -screen 0 1920x1080x24 &
-          export DISPLAY=:99
-
       - name: Test
-        run: |
-          simplescreenrecorder --start-recording --output-path=output.mp4 --display=:99
-          npm run test
-          simplescreenrecorder --stop-recording
-
-      - uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: Screen-Recording
-          path: output.mp4
+        run: npm run test
 
       - uses: actions/upload-artifact@v3
         if: always()
