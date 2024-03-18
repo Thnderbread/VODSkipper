@@ -10,10 +10,6 @@ import pkg from "./package.json" assert { type: "json" }
 import { config as baseConfig } from "./wdio.conf.js"
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url))
-console.log(
-  "The dist folder exists: ",
-  fs.existsSync(path.join(__dirname, "dist")),
-)
 // const chromeExtension = fs
 //   .readFileSync(
 //     path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
@@ -34,6 +30,10 @@ async function openExtensionPopup(
 
   if (browserName === "chrome") {
     await this.url("chrome://extensions/")
+    console.log(
+      "The dist folder exists: ",
+      fs.existsSync(path.join(__dirname, "dist")),
+    )
 
     // The method outlined here: https://webdriver.io/docs/extension-testing/web-extensions/#chrome
     // did not work when initially attempted. Since vodskipper is the only extension installed during
