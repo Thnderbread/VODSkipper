@@ -41,7 +41,7 @@ async function openExtensionPopup(
     const extensionItem = await this.$(">>> extensions-item")
 
     const screenshotPath = "./screenshot.png"
-    this.saveScreenshot(screenshotPath)
+    await this.saveScreenshot(screenshotPath)
 
     const extId = await extensionItem.getAttribute("id")
     if (!extId) throw new Error("Couldn't find extension id.")
@@ -178,9 +178,9 @@ export const config: Options.Testrunner = {
       "goog:chromeOptions": {
         args: [
           "--no-sandbox",
+          "--disable-gpu",
           "--headless=new",
           "--disable-audio-output",
-          "--disable-gpu",
           "--window-size=1440,735",
           `load-extension=${path.join(__dirname, "dist")}`,
         ],
