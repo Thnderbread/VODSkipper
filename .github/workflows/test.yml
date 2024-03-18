@@ -18,10 +18,9 @@ jobs:
 
       - name: Download Chrome Stable
         run: |
-          sudo apt-get install -y gnupg wget curl unzip --no-install-recommends; \
           wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | \
-          gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/google.gpg --import; \
-          chmod 644 /etc/apt/trusted.gpg.d/google.gpg; \
+          sudo gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/google.gpg --import; \
+          sudo chmod 644 /etc/apt/trusted.gpg.d/google.gpg; \
           echo "deb https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list; \
           sudo apt-get update -y; \
           sudo apt-get install -y google-chrome-stable;
@@ -29,11 +28,11 @@ jobs:
       - name: Download ChromeDriver
         run: |
           CHROMEDRIVER_VERSION=$(curl https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE); \
-          wget -N https://storage.googleapis.com/chrome-for-testing-public/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip -P ~/ && \
-          unzip ~/chromedriver-linux64.zip -d ~/ && \
-          rm ~/chromedriver-linux64.zip && \
-          mv -f ~/chromedriver-linux64/chromedriver /usr/bin/chromedriver && \
-          rm -rf ~/chromedriver-linux64
+          sudo wget -N https://storage.googleapis.com/chrome-for-testing-public/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip -P ~/ && \
+          sudo unzip ~/chromedriver-linux64.zip -d ~/ && \
+          sudo rm ~/chromedriver-linux64.zip && \
+          sudo mv -f ~/chromedriver-linux64/chromedriver /usr/bin/chromedriver && \
+          sudo rm -rf ~/chromedriver-linux64
 
         env:
           CHROME_BINARY: /usr/bin/google-chrome
