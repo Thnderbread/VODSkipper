@@ -182,7 +182,7 @@ export const config: Options.Testrunner = {
           "--disable-audio-output",
           "--disable-gpu",
           "--window-size=1440,735",
-          `--load-extension=${path.join(__dirname, "dist")}`,
+          `load-extension=${path.join(__dirname, "dist")}`,
         ],
         // extensions: [chromeExtension],
         // getting chrome stuff: https://gist.github.com/Faq/8821c5fd18dd01da4f80d7435158096d?permalink_comment_id=4976044#gistcomment-4976044
