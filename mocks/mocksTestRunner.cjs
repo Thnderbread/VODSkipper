@@ -6,7 +6,8 @@ const { exit } = require('node:process')
 const path = require('path')
 
 const test = process.argv.slice(2).pop()
-const wdioTestFile = path.join(__dirname, '..', 'wdio.test.conf.ts')
+const wdioConfig = process.env.CI ? 'wdio.test.conf.ci.ts' : 'wdio.test.conf.ts'
+const wdioTestFile = path.join(__dirname, '..', wdioConfig)
 
 const server = createServer()
 

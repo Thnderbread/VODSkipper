@@ -120,13 +120,6 @@ export const config: Options.Testrunner = {
         "browser.startup.homepage": "https://google.com",
       },
     ],
-    [
-      "chromedriver",
-      {
-        logFileName: "wdio-chromedriver.log",
-        outputDir: "./",
-      },
-    ],
   ],
 
   // Framework you want to run your specs with.
