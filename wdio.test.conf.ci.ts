@@ -1,7 +1,6 @@
-import fs from "node:fs"
 import url from "node:url"
 import path from "node:path"
-import { readFile } from "node:fs/promises"
+import fs from "node:fs/promises"
 
 import { browser } from "@wdio/globals"
 import type { Options } from "@wdio/types"
@@ -10,11 +9,11 @@ import pkg from "./package.json" assert { type: "json" }
 import { config as baseConfig } from "./wdio.conf.js"
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url))
-// const chromeExtension = fs
-//   .readFileSync(
-//     path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
-//   )
-//   .toString("base64")
+const chromeExtension = (
+  await fs.readFile(
+    path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
+  )
+).toString("base64")
 const firefoxExtensionPath = path.resolve(
   __dirname,
   `web-extension-firefox-v${pkg.version}.xpi`,
@@ -30,10 +29,6 @@ async function openExtensionPopup(
 
   if (browserName === "chrome") {
     await this.url("chrome://extensions/")
-    console.log(
-      "The dist folder exists: ",
-      fs.existsSync(path.join(__dirname, "dist")),
-    )
 
     // The method outlined here: https://webdriver.io/docs/extension-testing/web-extensions/#chrome
     // did not work when initially attempted. Since vodskipper is the only extension installed during
@@ -180,11 +175,11 @@ export const config: Options.Testrunner = {
           "--no-sandbox",
           "--disable-gpu",
           "--headless=new",
+          "--disable-infobars",
           "--disable-audio-output",
           "--window-size=1440,735",
-          `load-extension=${path.join(__dirname, "dist")}`,
         ],
-        // extensions: [chromeExtension],
+        extensions: [chromeExtension],
         // getting chrome stuff: https://gist.github.com/Faq/8821c5fd18dd01da4f80d7435158096d?permalink_comment_id=4976044#gistcomment-4976044
         // docker: https://webdriver.io/docs/docker/
         // docker: https://depot.dev/blog/docker-build-image
@@ -206,7 +201,7 @@ export const config: Options.Testrunner = {
     const browserName = (capabilities as WebdriverIO.Capabilities).browserName
 
     if (browserName === "firefox") {
-      const extension = await readFile(firefoxExtensionPath)
+      const extension = await fs.readFile(firefoxExtensionPath)
       await browser.installAddOn(extension.toString("base64"), true)
     }
   },
