@@ -16,33 +16,28 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Download Chrome Stable
-        run: |
-          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | \
-          sudo gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/google.gpg --import; \
-          sudo chmod 644 /etc/apt/trusted.gpg.d/google.gpg; \
-          echo "deb https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list; \
-          sudo apt-get update -y; \
-          sudo apt-get install -y google-chrome-stable;
-
-      - name: Download ChromeDriver
-        run: |
-          CHROMEDRIVER_VERSION=$(curl https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE); \
-          sudo wget -N https://storage.googleapis.com/chrome-for-testing-public/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip -P ~/ && \
-          sudo unzip ~/chromedriver-linux64.zip -d ~/ && \
-          sudo rm ~/chromedriver-linux64.zip && \
-          sudo mv -f ~/chromedriver-linux64/chromedriver /usr/bin/chromedriver && \
-          sudo rm -rf ~/chromedriver-linux64
-
-        env:
-          CHROME_BINARY: /usr/bin/google-chrome
-          DRIVER_BINARY: /usr/bin/chromedriver
-
       - name: Bundle
         run: npm run bundle-dev
 
+      - name: Install Xvfb & ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y xvfb ffmpeg
+
+      - name: Start Xvfb
+        run: |
+          Xvfb :99 -screen 0 1920x1080x24 &
+          export DISPLAY=:99
+
       - name: Test
-        run: npm run test
+        run: |
+          DISPLAY=:99 ffmpeg -video_size 1920x1080 -framerate 30 -f x11grab -i :99 -c:v libx264 -preset ultrafast -tune zerolatency -crf 18 output.mp4 &
+          npm run test-ci
+          pkill ffmpeg
+
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: Screen-Recording
+          path: output.mp4
 
       - uses: actions/upload-artifact@v4
         if: always()

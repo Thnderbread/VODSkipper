@@ -10,11 +10,11 @@ import pkg from "./package.json" assert { type: "json" }
 import { config as baseConfig } from "./wdio.conf.js"
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url))
-const chromeExtension = fs
-  .readFileSync(
-    path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
-  )
-  .toString("base64")
+// const chromeExtension = fs
+//   .readFileSync(
+//     path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
+//   )
+//   .toString("base64")
 const firefoxExtensionPath = path.resolve(
   __dirname,
   `web-extension-firefox-v${pkg.version}.xpi`,
@@ -177,8 +177,9 @@ export const config: Options.Testrunner = {
           "--headless=new",
           "--disable-audio-output",
           "--disable-gpu",
+          `load-extension=${path.join(__dirname, "dist")}`,
         ],
-        extensions: [chromeExtension],
+        // extensions: [chromeExtension],
       },
     },
     {

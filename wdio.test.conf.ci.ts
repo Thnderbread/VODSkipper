@@ -10,11 +10,15 @@ import pkg from "./package.json" assert { type: "json" }
 import { config as baseConfig } from "./wdio.conf.js"
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url))
-const chromeExtension = fs
-  .readFileSync(
-    path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
-  )
-  .toString("base64")
+console.log(
+  "The dist folder exists: ",
+  fs.existsSync(path.join(__dirname, "dist")),
+)
+// const chromeExtension = fs
+//   .readFileSync(
+//     path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
+//   )
+//   .toString("base64")
 const firefoxExtensionPath = path.resolve(
   __dirname,
   `web-extension-firefox-v${pkg.version}.xpi`,
@@ -171,18 +175,16 @@ export const config: Options.Testrunner = {
   capabilities: [
     {
       browserName: "chrome",
-      "wdio:chromedriverOptions": {
-        binary: process.env.DRIVER_BINARY,
-      },
       "goog:chromeOptions": {
         args: [
           "--no-sandbox",
           "--headless=new",
           "--disable-audio-output",
           "--disable-gpu",
+          "--window-size=1440,735",
+          `--load-extension=${path.join(__dirname, "dist")}`,
         ],
-        binary: process.env.CHROME_BINARY,
-        extensions: [chromeExtension],
+        // extensions: [chromeExtension],
         // getting chrome stuff: https://gist.github.com/Faq/8821c5fd18dd01da4f80d7435158096d?permalink_comment_id=4976044#gistcomment-4976044
         // docker: https://webdriver.io/docs/docker/
         // docker: https://depot.dev/blog/docker-build-image
