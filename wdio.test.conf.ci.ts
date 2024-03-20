@@ -99,7 +99,6 @@ async function enableExtensionPermissions(
 async function lowerVideoQuality(this: WebdriverIO.Browser) {
   const settings = await this.$("[aria-label=Settings]")
   await settings.click()
-
   const quality = await this.$("div=Quality")
   await quality.click()
 
@@ -175,21 +174,19 @@ export const config: Options.Testrunner = {
           "--no-sandbox",
           "--disable-gpu",
           "--headless=new",
+          "--disable-logging",
           "--disable-infobars",
+          "--disable-default-apps",
           "--disable-audio-output",
-          "--window-size=1440,735",
+          "--disable-dev-shm-usage",
         ],
         extensions: [chromeExtension],
-        // getting chrome stuff: https://gist.github.com/Faq/8821c5fd18dd01da4f80d7435158096d?permalink_comment_id=4976044#gistcomment-4976044
-        // docker: https://webdriver.io/docs/docker/
-        // docker: https://depot.dev/blog/docker-build-image
-        // stack overflow guy: https://stackoverflow.com/questions/77176189/webdriver-io-configuration-not-loading-any-chrome-extensions
       },
     },
     {
       browserName: "firefox",
       "moz:firefoxOptions": {
-        args: ["-headless"],
+        args: ["-headless", "shm-size=2g"],
       },
     },
   ],

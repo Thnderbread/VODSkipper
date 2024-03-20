@@ -36,8 +36,8 @@ describe("VODSkipper content script tests", () => {
      * because idk if the settings button is available
      * during ad playback
      */
-    await browser.lowerVideoQuality()
-    await new Promise(r => setTimeout(r, 1500))
+    // await browser.lowerVideoQuality()
+    // await new Promise(r => setTimeout(r, 1500))
   })
 
   afterEach(async () => {
@@ -45,6 +45,7 @@ describe("VODSkipper content script tests", () => {
   })
 
   it("Should skip each detected segment in order", async () => {
+    await browser.saveScreenshot("skipSS.png")
     const results: SkipResult[] = await browser.executeAsync(
       async (segments, delay, beforeSkipOffset, done) => {
         const video = document.querySelector("video")
