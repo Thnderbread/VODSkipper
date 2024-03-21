@@ -18,6 +18,7 @@ describe("VODSkipper popup tests when server is down", () => {
     await browser.openExtensionPopup("VodSkipper")
 
     await browser.setupExtensionPopup(mutedVodUrl)
+    // Give a couple seconds for stuff to load
     await new Promise(resolve => setTimeout(resolve, 5000))
     await browser.switchToWindow(extWindow)
 

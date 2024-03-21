@@ -58,6 +58,7 @@ async function startBrowser(browserName) {
     await browser.installAddOn(extension.toString('base64'), true)
 
     await browser.url("about:addons")
+    // Give a second for stuff to load
     await new Promise(r => setTimeout(r, 1000))
 
     const extensionButton = await browser.$("span=Extensions")

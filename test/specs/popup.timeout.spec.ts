@@ -17,6 +17,7 @@ describe("VODSkipper popup tests on server timeout", () => {
     await browser.openExtensionPopup("VodSkipper")
 
     await browser.setupExtensionPopup(mutedVodUrl)
+    // Give extra time to allow things to load properly
     await new Promise(resolve => setTimeout(resolve, 5000))
     await browser.switchToWindow(extWindow)
 
@@ -31,8 +32,9 @@ describe("VODSkipper popup tests on server timeout", () => {
         return (await messageEl.getText()) !== "Loading..."
       },
       {
-        timeout: 10000,
-        timeoutMsg: `[${browserName} browser]: Text still stays "Loading..." after 10s.`,
+        timeout: 20000,
+        interval: 5000,
+        timeoutMsg: `[${browserName} browser]: Text still stays "Loading..." after 15s.`,
       },
     )
     const headerText = await headerEl.getText()

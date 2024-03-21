@@ -29,4 +29,4 @@ COPY . .
 
 RUN npm run bundle-dev
 
-CMD [ "npm", "run", "test-ci" ]
+CMD ["npm", "run", "test-ci" ]

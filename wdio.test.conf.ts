@@ -36,9 +36,6 @@ async function openExtensionPopup(
     // tests, went with this workaround instead.
     const extensionItem = await this.$(">>> extensions-item")
 
-    const screenshotPath = "./screenshot.png"
-    this.saveScreenshot(screenshotPath)
-
     const extId = await extensionItem.getAttribute("id")
     if (!extId) throw new Error("Couldn't find extension id.")
     await this.url(`chrome-extension://${extId}/popup/${popupUrl}`)

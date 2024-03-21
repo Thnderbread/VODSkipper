@@ -52,6 +52,7 @@ module.exports = [
         delay: 100000,
         options: {
           middleware: async (req, res) => {
+            // Make sure time expires
             await new Promise(r => setTimeout(r, 10000))
             const segments = SEGMENTS_MAP.get(req.params.id)
             res.status(200).json({ segments })

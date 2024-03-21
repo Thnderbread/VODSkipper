@@ -1,6 +1,4 @@
-node_modules
 dist
-.DS_Store
 *.crx
 *.pem
 *.zip
@@ -8,3 +6,10 @@ dist
 *.png
 *.svg
 .env
+*.md
+.github
+.vscode
+.eslint*
+.DS_Store
+.prettier*
+node_modules

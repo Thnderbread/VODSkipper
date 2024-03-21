@@ -20,7 +20,7 @@ if (test === 'background') {
 
     await server.mock.collections.select("segments", { check: true })
 
-    server.logger.info("Running wdio background tests...")
+    server.logger.info("Running wdio background tests...\n\n")
     try {
       await runTest(`wdio run ${wdioTestFile} BACKGROUND`, server)
       exitCode = 0
@@ -45,12 +45,12 @@ if (test === 'background') {
       await runTest(`wdio run ${wdioTestFile} SERVERLESS`, server)
 
       // server timeout message
-      server.logger.info("Running 'timeout' test specs...")
+      server.logger.info("\nRunning 'timeout' test specs...")
       await server.mock.collections.select("server_timeout", { check: true })
       await runTest(`wdio run ${wdioTestFile} TIMEOUT`, server)
 
       // segments > 0 / segments === 0 messages
-      server.logger.info("Running 'actual' test specs...")
+      server.logger.info("\nRunning 'actual' test specs...\n\n")
       await server.mock.collections.select("segments", { check: true })
       await runTest(`wdio run ${wdioTestFile} SEGMENTS`, server)
 

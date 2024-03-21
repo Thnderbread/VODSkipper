@@ -35,9 +35,6 @@ async function openExtensionPopup(
     // tests, went with this workaround instead.
     const extensionItem = await this.$(">>> extensions-item")
 
-    const screenshotPath = "./screenshot.png"
-    await this.saveScreenshot(screenshotPath)
-
     const extId = await extensionItem.getAttribute("id")
     if (!extId) throw new Error("Couldn't find extension id.")
     await this.url(`chrome-extension://${extId}/popup/${popupUrl}`)
@@ -77,6 +74,7 @@ async function enableExtensionPermissions(
   }
 
   await this.url("about:addons")
+  // Give a second for stuff to lose
   await new Promise(r => setTimeout(r, 1000))
 
   const extensionButton = await this.$("span=Extensions")
@@ -105,6 +103,7 @@ async function lowerVideoQuality(this: WebdriverIO.Browser) {
   const lowestOption = await this.$("div=160p")
   await lowestOption.click()
 
+  // Wait a couple seconds
   await new Promise(resolve => setTimeout(resolve, 2000))
 }
 
@@ -112,13 +111,13 @@ async function lowerVideoQuality(this: WebdriverIO.Browser) {
  * In chrome specifically, the vod page needs
  * to be focused in order for messaging to work
  * properly. This will focus the vod window and then
- * reload the extension page, allowing the correct
+ * reload the unfocused extension page, allowing the correct
  * information to be displayed and tested. The function
  * assumes that the page it's currently on the
  * extension page.
  *
- * @param {string} vodUrl: The url of the vod to focus while the extension page is being reloaded
- * @param {number} delay: The amount of time to wait before reloading the vodPage.
+ * @param {string} vodUrl The url of the vod to focus while the extension page is being reloaded.
+ * @param {number} delay The amount of time to wait before reloading the vodPage.
  */
 async function setupExtensionPopup(
   this: WebdriverIO.Browser,
@@ -186,7 +185,7 @@ export const config: Options.Testrunner = {
     {
       browserName: "firefox",
       "moz:firefoxOptions": {
-        args: ["-headless", "shm-size=2g"],
+        args: ["-headless", "-disable-dev-shm-usage"],
       },
     },
   ],

@@ -7,36 +7,20 @@ on: # rebuild any PRs and main branch changes
       - main
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:stable
+        options: --privileged
+
     steps:
-      - name: Check out Git repository
+      - name: Checkout Github Repo
         uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Build Docker image
+        run: docker build -t vodskipper-test .
 
-      - name: Install
-        run: npm ci
-
-      - name: Bundle
-        run: npm run bundle-dev
-
-      - name: Test
-        run: npm run test-ci
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: Screenshot & logs
-          path: |
-            ./screenshot.png
-            ./wdio-chromedriver.log
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: extension-files
-          path: |
-            ./*.crx
-            ./*.zip
+      - name: Start Docker container test run
+        run: docker run vodskipper-test

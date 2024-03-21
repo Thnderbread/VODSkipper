@@ -17,6 +17,7 @@ describe("VODSkipper popup tests for number of segments", () => {
     await browser.openExtensionPopup("VodSkipper")
 
     await browser.setupExtensionPopup(unmutedVodUrl)
+    // Give a couple seconds for stuff to load
     await new Promise(r => setTimeout(r, 5000))
     await browser.switchToWindow(extWindow)
 
@@ -52,6 +53,7 @@ describe("VODSkipper popup tests for number of segments", () => {
     await browser.switchToWindow(extWindowHandle)
 
     await browser.setupExtensionPopup(mutedVodUrl)
+    // Give a couple seconds for stuff to load
     await new Promise(r => setTimeout(r, 5000))
     await browser.switchToWindow(extWindowHandle)
 
