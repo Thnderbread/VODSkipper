@@ -7,20 +7,46 @@ on: # rebuild any PRs and main branch changes
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  # build:
+  #   runs-on: ubuntu-latest
 
-    services:
-      docker:
-        image: docker:stable
-        options: --privileged
+  #   services:
+  #     docker:
+  #       image: docker:stable
+  #       options: --privileged
+
+  #   steps:
+  #     - name: Checkout Github Repo
+  #       uses: actions/checkout@v4
+
+  #     - name: Build Docker image
+  #       run: docker build -t vodskipper-test .
+
+  #     - name: Start Docker container test run
+  #       run: docker run vodskipper-test
+  test:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Github Repo
         uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: docker build -t vodskipper-test .
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Start Docker container test run
-        run: docker run vodskipper-test
+      - name: Install
+        run: npm ci
+
+      - name: Bundle stuff
+        run: npm run bundle-dev
+
+      - name: Run tests
+        run: npm run test-test
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Screenshot
+          path: ./screenshot.png

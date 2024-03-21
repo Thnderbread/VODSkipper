@@ -168,6 +168,9 @@ export const config: Options.Testrunner = {
   capabilities: [
     {
       browserName: "chrome",
+      "wdio:chromedriverOptions": {
+        binary: process.env.DRIVER_BINARY,
+      },
       "goog:chromeOptions": {
         args: [
           "--no-sandbox",
@@ -180,14 +183,15 @@ export const config: Options.Testrunner = {
           "--disable-dev-shm-usage",
         ],
         extensions: [chromeExtension],
+        binary: process.env.CHROME_BINARY,
       },
     },
-    // {
-    //   browserName: "firefox",
-    //   "moz:firefoxOptions": {
-    //     args: ["-headless", "-disable-dev-shm-usage"],
-    //   },
-    // },
+    {
+      browserName: "firefox",
+      "moz:firefoxOptions": {
+        args: ["-headless", "-disable-dev-shm-usage"],
+      },
+    },
   ],
   before: async capabilities => {
     browser.addCommand("lowerVideoQuality", lowerVideoQuality)

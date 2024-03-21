@@ -1,7 +1,6 @@
-import fs from "node:fs"
 import url from "node:url"
 import path from "node:path"
-import { readFile } from "node:fs/promises"
+import fs from "node:fs/promises"
 
 import { browser } from "@wdio/globals"
 import type { Options } from "@wdio/types"
@@ -10,11 +9,11 @@ import pkg from "./package.json" assert { type: "json" }
 import { config as baseConfig } from "./wdio.conf.js"
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url))
-// const chromeExtension = fs
-//   .readFileSync(
-//     path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
-//   )
-//   .toString("base64")
+const chromeExtension = (
+  await fs.readFile(
+    path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
+  )
+).toString("base64")
 const firefoxExtensionPath = path.resolve(
   __dirname,
   `web-extension-firefox-v${pkg.version}.xpi`,
@@ -36,6 +35,7 @@ async function openExtensionPopup(
     // tests, went with this workaround instead.
     const extensionItem = await this.$(">>> extensions-item")
 
+    await this.saveScreenshot("./screenshot.png")
     const extId = await extensionItem.getAttribute("id")
     if (!extId) throw new Error("Couldn't find extension id.")
     await this.url(`chrome-extension://${extId}/popup/${popupUrl}`)
@@ -150,20 +150,20 @@ declare global {
   }
 }
 
-const spec = process.argv.slice(-1).pop()
-if (!spec) throw new Error("Missing spec.")
+// const spec = process.argv.slice(-1).pop()
+// if (!spec) throw new Error("Missing spec.")
 
-const specFiles = {
-  CONTENT: ["./test/specs/content.spec.ts"],
-  TIMEOUT: ["./test/specs/popup.timeout.spec.ts"],
-  BACKGROUND: ["./test/specs/background.spec.ts"],
-  SEGMENTS: ["./test/specs/popup.segments.spec.ts"],
-  SERVERLESS: ["./test/specs/popup.serverless.spec.ts"],
-}
+// const specFiles = {
+//   CONTENT: ["./test/specs/content.spec.ts"],
+//   TIMEOUT: ["./test/specs/popup.timeout.spec.ts"],
+//   BACKGROUND: ["./test/specs/background.spec.ts"],
+//   SEGMENTS: ["./test/specs/popup.segments.spec.ts"],
+//   SERVERLESS: ["./test/specs/popup.serverless.spec.ts"],
+// }
 
 export const config: Options.Testrunner = {
   ...baseConfig,
-  specs: specFiles[spec],
+  specs: ["./test/specs/background.spec.ts"],
   logLevel: "trace",
   capabilities: [
     {
@@ -174,9 +174,8 @@ export const config: Options.Testrunner = {
           "--headless=new",
           "--disable-audio-output",
           "--disable-gpu",
-          `load-extension=${path.join(__dirname, "dist")}`,
         ],
-        // extensions: [chromeExtension],
+        extensions: [chromeExtension],
       },
     },
     {
@@ -194,7 +193,7 @@ export const config: Options.Testrunner = {
     const browserName = (capabilities as WebdriverIO.Capabilities).browserName
 
     if (browserName === "firefox") {
-      const extension = await readFile(firefoxExtensionPath)
+      const extension = await fs.readFile(firefoxExtensionPath)
       await browser.installAddOn(extension.toString("base64"), true)
     }
   },
