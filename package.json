@@ -46,7 +46,6 @@
     "start:firefox:startBrowser": "node ./.github/scripts/start.js firefox",
     "test": "run-s test:*",
     "test-ci": "cross-env CI=true run-s test:*",
-    "test-test": "npx wdio run wdio.test.conf.ts --spec ./test/specs/background.spec.ts",
     "test:background": "node mocks/mocksTestRunner.cjs background",
     "test:content": "node mocks/mocksTestRunner.cjs content",
     "test:popup": "node mocks/mocksTestRunner.cjs popup",

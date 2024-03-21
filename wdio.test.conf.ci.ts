@@ -189,7 +189,7 @@ export const config: Options.Testrunner = {
     {
       browserName: "firefox",
       "moz:firefoxOptions": {
-        args: ["-headless", "-disable-dev-shm-usage"],
+        args: ["-headless", "-shm-size=2g"],
       },
     },
   ],
