@@ -182,12 +182,12 @@ export const config: Options.Testrunner = {
         extensions: [chromeExtension],
       },
     },
-    {
-      browserName: "firefox",
-      "moz:firefoxOptions": {
-        args: ["-headless", "-disable-dev-shm-usage"],
-      },
-    },
+    // {
+    //   browserName: "firefox",
+    //   "moz:firefoxOptions": {
+    //     args: ["-headless", "-disable-dev-shm-usage"],
+    //   },
+    // },
   ],
   before: async capabilities => {
     browser.addCommand("lowerVideoQuality", lowerVideoQuality)
