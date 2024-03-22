@@ -5,8 +5,8 @@ import { existsSync } from "node:fs"
 import { browser } from "@wdio/globals"
 import type { Options } from "@wdio/types"
 
-import pkg from "./package.json" assert { type: "json" }
 import { config as baseConfig } from "./wdio.conf.js"
+import pkg from "./package.json" assert { type: "json" }
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url))
 const chromeExtension = (
