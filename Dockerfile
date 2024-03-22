@@ -2,6 +2,12 @@ FROM node:20-slim
 
 RUN corepack enable
 
+RUN apt-get update
+RUN apt-get install -y \
+  ca-certificates \
+  curl \
+  gnupg
+
 RUN apt-get install -y gnupg wget curl unzip --no-install-recommends; \
   wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | \
   gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/google.gpg --import; \
