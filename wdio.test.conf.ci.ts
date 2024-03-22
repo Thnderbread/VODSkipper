@@ -28,8 +28,7 @@ async function openExtensionPopup(
     .browserName
 
   if (browserName === "chrome") {
-    await fs.appendFile(
-      "Info.txt",
+    console.log(
       `Access to .crx: ${fs.access(
         path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
       )}\nDist exists: ${existsSync(
@@ -193,6 +192,10 @@ export const config: Options.Testrunner = {
           "--disable-default-apps",
           "--disable-audio-output",
           "--disable-dev-shm-usage",
+          `--disable-extensions-except=${path.join(
+            __dirname,
+            `web-extension-chrome-v${pkg.version}.crx`,
+          )}`,
         ],
         extensions: [chromeExtension],
         binary: process.env.CHROME_BINARY,

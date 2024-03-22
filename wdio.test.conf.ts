@@ -29,7 +29,7 @@ async function openExtensionPopup(
 
   if (browserName === "chrome") {
     await this.url("chrome://extensions/")
-    await fs.appendFile(
+    console.log(
       "Info.txt",
       `Access to .crx: ${fs.access(
         path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
