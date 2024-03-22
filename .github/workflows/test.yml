@@ -37,7 +37,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: thnderbread/vodskipper:vstest-latest
+          tags: thnderbread/vodskipper:vodskipper-test
 
       - uses: hoverkraft-tech/compose-action@v1.5.1
 
