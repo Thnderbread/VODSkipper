@@ -2,7 +2,7 @@ version: '3'
 
 services:
   vodskipper:
-    image: thnderbread/vodskipper
+    image: thnderbread/vodskipper:vodskipper-test
     privileged: true
     tty: true
     volumes:
