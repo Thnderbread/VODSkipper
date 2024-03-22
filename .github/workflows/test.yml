@@ -21,7 +21,15 @@ jobs:
       - name: Checkout Github Repo
         uses: actions/checkout@v4
 
-      - uses: hoverkraft-tech/compose-action@v1.5.1
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+
+      - name: Run Docker Compose
+        run: docker-compose up
+
+        # - uses: hoverkraft-tech/compose-action@v1.5.1
 
       # - name: Build Docker image
       #   run: docker build -t vodskipper-test .

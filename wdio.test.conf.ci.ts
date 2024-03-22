@@ -28,21 +28,6 @@ async function openExtensionPopup(
     .browserName
 
   if (browserName === "chrome") {
-    console.log('"spec" Reporter:')
-    console.log(
-      `crx Exists: ${existsSync(
-        path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
-      )}\nAccess to .crx: ${await fs.access(
-        path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
-      )}\nDist exists: ${existsSync(
-        path.join(__dirname, "/dist"),
-      )}\nAccess to dist: ${await fs.access(
-        path.join(__dirname, "/dist"),
-      )}\nLength of chrome file: ${
-        chromeExtension.length
-      }\nFiles in dist: ${await fs.readdir(path.join(__dirname, "/dist"))}`,
-    )
-    console.log("Spec Files:")
     await this.url("chrome://extensions/")
 
     // The method outlined here: https://webdriver.io/docs/extension-testing/web-extensions/#chrome
