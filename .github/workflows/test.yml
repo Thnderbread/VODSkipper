@@ -21,24 +21,24 @@ jobs:
       - name: Checkout Github Repo
         uses: actions/checkout@v4
 
-      # - name: Build Docker image
-      #   run: docker build -t vodskipper-test .
+      - name: Build Docker image
+        run: docker build -t vodskipper-test .
 
-      # - name: Start Docker container test run
-      #   run: docker run --name vs-container vodskipper-test
+      - name: Start Docker container test run
+        run: docker run --name vs-container vodskipper-test
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      # - uses: actions/setup-node@v4
+      #   with:
+      #     node-version: 20
 
-      - run: npm ci
+      # - run: npm ci
 
-      - run: npm run bundle-dev
+      # - run: npm run bundle-dev
 
-      - run: npm run test-ci
+      # - run: npm run test-ci
 
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: info.txt
-          path: ./info.txt
+      # - uses: actions/upload-artifact@v4
+      #   if: always()
+      #   with:
+      #     name: info.txt
+      #     path: ./info.txt

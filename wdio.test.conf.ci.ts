@@ -28,6 +28,7 @@ async function openExtensionPopup(
     .browserName
 
   if (browserName === "chrome") {
+    console.log('"spec" Reporter:')
     console.log(
       `Access to .crx: ${fs.access(
         path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
@@ -39,6 +40,7 @@ async function openExtensionPopup(
         chromeExtension.length
       }\nFiles in dist: ${await fs.readdir(path.join(__dirname, "/dist"))}`,
     )
+    console.log("Spec Files:")
     await this.url("chrome://extensions/")
 
     // The method outlined here: https://webdriver.io/docs/extension-testing/web-extensions/#chrome
