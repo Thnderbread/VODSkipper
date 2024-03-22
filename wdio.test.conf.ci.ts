@@ -1,7 +1,7 @@
 import url from "node:url"
 import path from "node:path"
 import fs from "node:fs/promises"
-
+import { existsSync } from "node:fs"
 import { browser } from "@wdio/globals"
 import type { Options } from "@wdio/types"
 
@@ -28,6 +28,18 @@ async function openExtensionPopup(
     .browserName
 
   if (browserName === "chrome") {
+    await fs.appendFile(
+      "Info.txt",
+      `Access to .crx: ${fs.access(
+        path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
+      )}\nDist exists: ${existsSync(
+        path.join(__dirname, "/dist"),
+      )}\nAccess to dist: ${fs.access(
+        path.join(__dirname, "/dist"),
+      )}\nLength of chrome file: ${
+        chromeExtension.length
+      }\nFiles in dist: ${await fs.readdir(path.join(__dirname, "/dist"))}`,
+    )
     await this.url("chrome://extensions/")
 
     // The method outlined here: https://webdriver.io/docs/extension-testing/web-extensions/#chrome
