@@ -30,11 +30,13 @@ async function openExtensionPopup(
   if (browserName === "chrome") {
     console.log('"spec" Reporter:')
     console.log(
-      `Access to .crx: ${fs.access(
+      `crx Exists: ${existsSync(
+        path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
+      )}\nAccess to .crx: ${await fs.access(
         path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
       )}\nDist exists: ${existsSync(
         path.join(__dirname, "/dist"),
-      )}\nAccess to dist: ${fs.access(
+      )}\nAccess to dist: ${await fs.access(
         path.join(__dirname, "/dist"),
       )}\nLength of chrome file: ${
         chromeExtension.length
