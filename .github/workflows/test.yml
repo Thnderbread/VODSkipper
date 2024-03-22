@@ -21,11 +21,13 @@ jobs:
       - name: Checkout Github Repo
         uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: docker build -t vodskipper-test .
+      - uses: hoverkraft-tech/compose-action@v1.5.1
 
-      - name: Start Docker container test run
-        run: docker run --name vs-container vodskipper-test
+      # - name: Build Docker image
+      #   run: docker build -t vodskipper-test .
+
+      # - name: Start Docker container test run
+      #   run: docker run --name vs-container vodskipper-test
 
       # - uses: actions/setup-node@v4
       #   with:

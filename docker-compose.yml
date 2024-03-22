@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  vodskipper:
+    image: vodskipper-test
+    privileged: true
+    tty: true
+    volumes:
+      - ./tests:/app/.tests
+    

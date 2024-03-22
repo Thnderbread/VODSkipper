@@ -196,10 +196,7 @@ export const config: Options.Testrunner = {
           "--disable-default-apps",
           "--disable-audio-output",
           "--disable-dev-shm-usage",
-          `--disable-extensions-except=${path.join(
-            __dirname,
-            `web-extension-chrome-v${pkg.version}.crx`,
-          )}`,
+          `--disable-extensions-except=${path.join(__dirname, "dist")}`,
         ],
         extensions: [chromeExtension],
         binary: process.env.CHROME_BINARY,
