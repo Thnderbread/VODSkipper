@@ -37,6 +37,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
+          tags: vs/vs:latest
 
       - uses: hoverkraft-tech/compose-action@v1.5.1
 
