@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  vodskipper:
+  container:
     image: thnderbread/vodskipper:vodskipper-test
     options: --shm-size=2gb
     privileged: true
