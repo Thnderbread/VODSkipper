@@ -7,8 +7,7 @@ services:
     tty: true
     volumes:
       - ./tests:/app/.tests
-container:
-  options: --shm-size=2gb
+
 
     # all that's left is to try splitting mocks and tests
     # and to try publishing the extension
