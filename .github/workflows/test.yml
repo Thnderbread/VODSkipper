@@ -38,8 +38,8 @@ jobs:
           push: true
           tags: thnderbread/vodskipper:vodskipper-test
 
-      - name: Run Docker Compose
-        run: docker-compose up
+      - name: idk running test directly maybe
+        run: npm run test-ci
 # jobs:
 #   build:
 #     runs-on: ubuntu-latest
