@@ -6,22 +6,22 @@ on: # rebuild any PRs and main branch changes
     branches: [main]
 
 jobs:
-  container-test-job:
+  build:
     runs-on: ubuntu-latest
-    container:
-      image: thnderbread/vodskipper:vodskipper-test
-      options: --shm-size=2gb
+
+    services:
+      docker:
+        image: thnderbread/vodskipper:vodskipper-test
+        options: >-
+          --privileged
+          --shm-size=2gb
 
     steps:
       - name: Checkout Github Repo
         uses: actions/checkout@v4
 
-      - name: Install sudo wudo
-        run: apt update && apt install sudo
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
+      # - name: Run Docker Compose
+      #   run: docker-compose up
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -38,64 +38,28 @@ jobs:
           push: true
           tags: thnderbread/vodskipper:vodskipper-test
 
-      - name: idk running test directly maybe
-        run: npm run test-ci
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
+      - name: Run Docker Compose
+        run: docker-compose up
+      # - uses: hoverkraft-tech/compose-action@v1.5.1
 
-#     services:
-#       docker:
-#         image: docker:stable
-#         options: >-
-#           --privileged
-#           --shm-size=2gb
+      # - name: Build Docker image
+      #   run: docker build -t vodskipper-test .
 
-#     steps:
-#       - name: Checkout Github Repo
-#         uses: actions/checkout@v4
+      # - name: Start Docker container test run
+      #   run: docker run --name vs-container vodskipper-test
 
-#       # - name: Run Docker Compose
-#       #   run: docker-compose up
+      # - uses: actions/setup-node@v4
+      #   with:
+      #     node-version: 20
 
-#       - name: Set up Docker Buildx
-#         uses: docker/setup-buildx-action@v3
+      # - run: npm ci
 
-#       - name: Login to Docker Hub
-#         uses: docker/login-action@v3
-#         with:
-#           username: ${{ secrets.DOCKERHUB_USERNAME }}
-#           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # - run: npm run bundle-dev
 
-#       - name: Build and push
-#         uses: docker/build-push-action@v5
-#         with:
-#           push: true
-#           tags: thnderbread/vodskipper:vodskipper-test
+      # - run: npm run test-ci
 
-#       - name: Run Docker Compose
-#         run: docker-compose up
-
-# - uses: hoverkraft-tech/compose-action@v1.5.1
-
-# - name: Build Docker image
-#   run: docker build -t vodskipper-test .
-
-# - name: Start Docker container test run
-#   run: docker run --name vs-container vodskipper-test
-
-# - uses: actions/setup-node@v4
-#   with:
-#     node-version: 20
-
-# - run: npm ci
-
-# - run: npm run bundle-dev
-
-# - run: npm run test-ci
-
-# - uses: actions/upload-artifact@v4
-#   if: always()
-#   with:
-#     name: info.txt
-#     path: ./info.txt
+      # - uses: actions/upload-artifact@v4
+      #   if: always()
+      #   with:
+      #     name: info.txt
+      #     path: ./info.txt
