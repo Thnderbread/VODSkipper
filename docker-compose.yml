@@ -1,13 +1,14 @@
 version: '3'
 
 services:
-  container:
+  vodskipper:
     image: thnderbread/vodskipper:vodskipper-test
-    options: --shm-size=2gb
     privileged: true
     tty: true
     volumes:
       - ./tests:/app/.tests
+container:
+  options: --shm-size=2gb
 
     # all that's left is to try splitting mocks and tests
     # and to try publishing the extension
