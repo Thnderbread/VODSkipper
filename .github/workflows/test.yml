@@ -37,7 +37,7 @@ jobs:
           push: true
           tags: thnderbread/vodskipper:vodskipper-test
 
-      - name: Run Docker Compose
+      - name: Run Tests With Docker Compose
         run: docker-compose up
       # - uses: hoverkraft-tech/compose-action@v1.5.1
 

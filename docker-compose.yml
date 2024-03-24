@@ -5,6 +5,7 @@ services:
     image: thnderbread/vodskipper:vodskipper-test
     privileged: true
     tty: true
+    shm_size: '2gb'
     volumes:
       - ./tests:/app/.tests
 
