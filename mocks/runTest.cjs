@@ -27,11 +27,31 @@ function runTest(testCommand, server = null) {
     })
 
     sub.stdout.on('data', (data) => {
-      logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
+      if (data.includes('"spec" Reporter:')) {
+        inResultsBlock = true
+      }
+
+      if (inResultsBlock) {
+        logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
+      }
+
+      if (data.includes('Spec Files:')) {
+        inResultsBlock = false
+      }
     })
 
     sub.stderr.on('data', (data) => {
-      logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
+      if (data.includes('"spec" Reporter:')) {
+        inResultsBlock = true
+      }
+
+      if (inResultsBlock) {
+        logger.error(`\b[${wdioPrefix}] ${data.toString()}`)
+      }
+
+      if (data.includes('Spec Files:')) {
+        inResultsBlock = false
+      }
     })
 
     sub.on('close', (code) => {

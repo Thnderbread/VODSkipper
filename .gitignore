@@ -1,5 +1,5 @@
 node_modules
-dist
+workflows
 .DS_Store
 *.crx
 *.pem
@@ -7,4 +7,5 @@ dist
 *.xpi
 *.png
 *.svg
+dist
 .env

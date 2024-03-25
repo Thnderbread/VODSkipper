@@ -45,11 +45,8 @@ async function openExtensionPopup(
     // The method outlined here: https://webdriver.io/docs/extension-testing/web-extensions/#chrome
     // did not work when initially attempted. Since vodskipper is the only extension installed during
     // tests, went with this workaround instead.
-    const extensionsManager = await this.$("extensions-manager")
-    const extensionItemList = await extensionsManager.shadow$(
-      "extensions-item-list",
-    )
-    const extensionItem = await extensionItemList.shadow$("extensions-item")
+    const extensionItem = await this.$(">>> extensions-item")
+
     const extId = await extensionItem.getAttribute("id")
 
     if (!extId) throw new Error("Couldn't find extension id.")
@@ -91,6 +88,7 @@ async function enableExtensionPermissions(
   }
 
   await this.url("about:addons")
+  // Give a second for stuff to lose
   await new Promise(r => setTimeout(r, 1000))
 
   const extensionButton = await this.$("span=Extensions")
@@ -113,13 +111,13 @@ async function enableExtensionPermissions(
 async function lowerVideoQuality(this: WebdriverIO.Browser) {
   const settings = await this.$("[aria-label=Settings]")
   await settings.click()
-
   const quality = await this.$("div=Quality")
   await quality.click()
 
   const lowestOption = await this.$("div=160p")
   await lowestOption.click()
 
+  // Wait a couple seconds
   await new Promise(resolve => setTimeout(resolve, 2000))
 }
 
@@ -127,13 +125,13 @@ async function lowerVideoQuality(this: WebdriverIO.Browser) {
  * In chrome specifically, the vod page needs
  * to be focused in order for messaging to work
  * properly. This will focus the vod window and then
- * reload the extension page, allowing the correct
+ * reload the unfocused extension page, allowing the correct
  * information to be displayed and tested. The function
  * assumes that the page it's currently on the
  * extension page.
  *
- * @param {string} vodUrl: The url of the vod to focus while the extension page is being reloaded
- * @param {number} delay: The amount of time to wait before reloading the vodPage.
+ * @param {string} vodUrl The url of the vod to focus while the extension page is being reloaded.
+ * @param {number} delay The amount of time to wait before reloading the vodPage.
  */
 async function setupExtensionPopup(
   this: WebdriverIO.Browser,
@@ -171,8 +169,8 @@ if (!spec) throw new Error("Missing spec.")
 
 const specFiles = {
   CONTENT: ["./test/specs/content.spec.ts"],
-  BACKGROUND: ["./test/specs/background.spec.ts"],
   TIMEOUT: ["./test/specs/popup.timeout.spec.ts"],
+  BACKGROUND: ["./test/specs/background.spec.ts"],
   SEGMENTS: ["./test/specs/popup.segments.spec.ts"],
   SERVERLESS: ["./test/specs/popup.serverless.spec.ts"],
 }
@@ -180,6 +178,7 @@ const specFiles = {
 export const config: Options.Testrunner = {
   ...baseConfig,
   specs: specFiles[spec],
+  logLevel: "trace",
   capabilities: [
     {
       browserName: "chrome",
@@ -188,12 +187,14 @@ export const config: Options.Testrunner = {
         // trying to optimize performance a bit
         // https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
         args: [
+          "--no-sandbox",
           "--disable-gpu",
           "--headless=new",
-          "--disable-audio-output",
+          "--disable-logging",
+          "--disable-infobars",
           "--disable-default-apps",
-          "--no-default-browser-check",
-          "--disable-application-cache",
+          "--disable-audio-output",
+          "--disable-dev-shm-usage",
         ],
         extensions: [chromeExtension],
       },
