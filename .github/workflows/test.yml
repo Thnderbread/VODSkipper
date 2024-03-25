@@ -9,12 +9,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    # using services option works
+    # but container option doesn't. what's the difference?
+    # 'services:' 'docker:' seems to include docker installed & everything surrounding it
+    # but 'container:' doesn't. Can they be used in conjuction?
+    # maybe 'container:' has a child called 'with', that i can pass the npm run test-ci command to or something
     services:
       docker:
         image: docker:stable
         options: >-
           --privileged
           --shm-size=2gb
+
+    container:
+      image: thnderbread/vodskipper:vodskipper-test
+      options: --shm-size=2gb
 
     steps:
       - name: Checkout Github Repo
@@ -34,9 +43,9 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: thnderbread/vodskipper:vodskipper-test
+        # with:
+        #   push: true
+        #   tags: thnderbread/vodskipper:vodskipper-test
 
       - name: Run Tests With Docker Compose
         run: docker-compose up
