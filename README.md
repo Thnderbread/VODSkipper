@@ -83,7 +83,7 @@ I did some more digging, and it seemed that the issue is that Docker allows an s
 - <https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips>
 - <https://developer.chrome.com/docs/puppeteer/troubleshooting#best_practices_with_docker>
 
-I attempted to increase the shm size as recommended. I did this by passing the --shm-size flag to docker run, specifying the shm size in test.yml.
+I attempted to increase the shm size as recommended. I did this by passing the --shm-size flag to docker run, and by specifying the shm size in test.yml. Neither worked.
 
 I also attempted using docker-compose to run everything, specifically after seeing someone on Stack Overflow with a similar issue to me say that it worked for them I tried using the --shm-size flag in docker-compose as well, which did not work.
 
