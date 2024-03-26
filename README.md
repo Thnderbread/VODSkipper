@@ -40,7 +40,7 @@ Bundle the extension by running:
 npm run build
 ```
 
-This script will bundle the extension as `web-extension-chrome-vX.X.X.crx` and `web-extension-firefox-vX.X.X.zip`. The generated files are in `dist/`.
+This script will bundle the extension as `vodskipper-chrome-vX.X.X.crx` and `vodskipper-firefox-vX.X.X.zip`. The generated files are in `dist/`.
 
 ```sh
 npm run load-dev:chrome

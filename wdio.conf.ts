@@ -113,7 +113,7 @@ export const config: Options.Testrunner = {
       "firefox-profile",
       {
         // trying to optimize firefox performance a bit
-        extensions: [path.join(`web-extension-firefox-v${pkg.version}.xpi`)],
+        extensions: [path.join(`vodskipper-firefox-v${pkg.version}.xpi`)],
         "xpinstall.signatures.required": false,
         "browser.tab.animate": false,
         "browser.panorama.animate_zoom": false,
@@ -206,7 +206,7 @@ export const config: Options.Testrunner = {
   before: async capabilities => {
     const firefoxExtensionPath = path.resolve(
       __dirname,
-      `web-extension-firefox-v${pkg.version}.xpi`,
+      `vodskipper-firefox-v${pkg.version}.xpi`,
     )
 
     const browserName = (capabilities as WebdriverIO.Capabilities).browserName

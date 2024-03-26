@@ -23,12 +23,12 @@ import { config as baseConfig } from "./wdio.conf.js"
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url))
 const chromeExtension = (
   await fs.readFile(
-    path.join(__dirname, `web-extension-chrome-v${pkg.version}.crx`),
+    path.join(__dirname, `vodskipper-chrome-v${pkg.version}.crx`),
   )
 ).toString("base64")
 const firefoxExtensionPath = path.resolve(
   __dirname,
-  `web-extension-firefox-v${pkg.version}.xpi`,
+  `vodskipper-firefox-v${pkg.version}.xpi`,
 )
 
 async function openExtensionPopup(
