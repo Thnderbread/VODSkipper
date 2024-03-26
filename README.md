@@ -63,11 +63,11 @@ export const config = {
 
 ---
 
-as outlined by wdio: <https://webdriver.io/docs/**extension**-testing/web-extensions/>, neither of which worked.
+as outlined by wdio: <https://webdriver.io/docs/extension-testing/web-extensions/>, neither of which worked.
 
 I tried including the flag ```'--disable-extensions-except=${extensionPath}'``` with both methods. Neither worked.
 
-I confirmed that the /dist folder, .crx and .xpi files were all being created by the time the tests attempted to access them. They were all there.
+I confirmed that the `/dist` folder, `.crx` and `.xpi` files were all being created by the time the tests attempted to access them. They were all there.
 
 It should also be noted that this was not an issue earlier on in the repo's history. When I was first making pushes without touching the tests or the test.yml, they all passed. I haven't gone back and compared differences from that version of the repo and my current repo - that may provide some insight. However, there were some things that needed to be fixed that I don't fully remember (intangibles like outdated dependencies and whatnot), so going back to see what succeeded in older repo's may be a bit challenging, but overall worth it.
 
