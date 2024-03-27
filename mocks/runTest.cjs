@@ -20,6 +20,7 @@ function runTest(testCommand, server = null) {
 
   return new Promise((resolve, reject) => {
     const sub = spawn(npxExecutable, args)
+    let inResultsBlock = false
 
     sub.on('error', (error) => {
       logger.error('Subprocess error: ', error)

@@ -2,23 +2,11 @@ import url from "node:url"
 import path from "node:path"
 import fs from "node:fs/promises"
 
-/**
- * Things that might not be needed:
- * build folder
- * src folder
- * common folder
- *
- * delete stock icons from public
- * delete vite & other unnecessary scripts / deps
- * from package.json
- *
- */
-
 import { browser } from "@wdio/globals"
 import type { Options } from "@wdio/types"
 
-import pkg from "./package.json" assert { type: "json" }
 import { config as baseConfig } from "./wdio.conf.js"
+import pkg from "./package.json" assert { type: "json" }
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url))
 const chromeExtension = (

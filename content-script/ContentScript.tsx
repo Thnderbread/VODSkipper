@@ -5,9 +5,9 @@ import DEFAULTSEGMENT from "../common/DefaultSegment"
 import { useState, useEffect, useReducer, useRef } from "react"
 import {
   type State,
-  type GetDataResponse,
   DecisionCodes,
   type StatusMessage,
+  type GetDataResponse,
   type ResponseCallback,
 } from "../types"
 import {

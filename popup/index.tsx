@@ -7,7 +7,7 @@ const pluginTagId = "extension-root"
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const component = document.getElementById(pluginTagId)!
 ReactDOM.createRoot(component).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  // <React.StrictMode>
+  <App />,
+  // </React.StrictMode>
 )

@@ -5,17 +5,27 @@
   "description": "Extension for skipping muted VOD sections on Twitch.tv.",
   "homepage_url": "https://github.com/Thnderbread/twitchextension",
   "version": "0.0.1",
-  "host_permissions": ["https://www.twitch.tv/videos/*"],
+  "host_permissions": [
+    "https://www.twitch.tv/videos/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://www.twitch.tv/videos/*"],
+      "matches": [
+        "https://www.twitch.tv/videos/*"
+      ],
       "run_at": "document_idle",
-      "js": ["./contentScript/index.js"],
-      "css": ["./style.css"]
+      "js": [
+        "./contentScript/index.js"
+      ],
+      "css": [
+        "./style.css"
+      ]
     }
   ],
   "background": {
-    "scripts": ["./background/background.js"],
+    "scripts": [
+      "./background/background.js"
+    ],
     "type": "module"
   },
   "action": {
@@ -28,7 +38,9 @@
       "strict_min_version": "100.0"
     }
   },
-  "permissions": ["activeTab", "storage"],
+  "permissions": [
+    "storage"
+  ],
   "icons": {
     "72": "vodskipper-72.png",
     "96": "vodskipper-96.png",
