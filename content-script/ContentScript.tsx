@@ -82,20 +82,18 @@ const ContentScript: React.FC = () => {
       const { data, error }: GetDataResponse =
         await browser.runtime.sendMessage({ action: "getData", vodID })
       if (error !== null) {
+        console.error(`Couldn't do stuff (content script): ${error}`)
         dispatch({ type: "SET_ERROR", payload: error })
-        setLoaded(true)
-      } else if (data.length === 0) {
-        /**
-         * Returning if there's no data
-         * since initial reducer state
-         * has dummy data
-         */
-        setLoaded(true)
-      } else {
+      } else if (data.length > 0) {
         console.log(`Found ${data.length} muted segments for vod ${vodID}.`)
         dispatch({ type: "SET_MUTED_SEGMENTS", payload: data })
-        setLoaded(true)
       }
+      /**
+       * Allow the initial
+       * reducer state with dummy data
+       * to be used
+       */
+      setLoaded(true)
     })()
 
     return () => {

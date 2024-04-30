@@ -1,3 +1,4 @@
+import { $ } from "@wdio/globals"
 async function handleAd() {
   const ad = await $("[aria-label=Ad]")
   try {

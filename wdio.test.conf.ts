@@ -178,6 +178,7 @@ export const config: Options.Testrunner = {
           "--no-sandbox",
           "--disable-gpu",
           "--headless=new",
+          "--disable-audio",
           "--disable-logging",
           "--disable-infobars",
           "--disable-default-apps",
