@@ -7,27 +7,24 @@ async function handleContentScriptMessage(
   response: ResponseCallback,
 ): Promise<boolean | undefined> {
   if (typeof vodID !== "string") {
-    response({ error: new TypeError("Invalid data received") })
+    console.warn("Invalid data received.")
+    response({ data: undefined })
     return true
   } else {
-    const { success, error, data } = await fetchVodData(vodID)
+    const { success, data } = await fetchVodData(vodID)
 
     if (!success) {
-      response({ error: error.message })
+      response({ data: undefined })
       return true
     } else {
-      response({ data, error: null })
+      response({ data })
       return true
     }
   }
 }
 
 browser.runtime.onMessage.addListener(
-  (
-    msg: GetDataMessage,
-    sender: browser.Runtime.MessageSender,
-    response: ResponseCallback,
-  ) => {
+  (msg: GetDataMessage, _, response: ResponseCallback) => {
     if (msg.action === "getData") {
       void handleContentScriptMessage(msg, response)
       return true

@@ -1,6 +1,8 @@
 import browser from "webextension-polyfill"
 import React, { useEffect, useState } from "react"
-import sendStatusMessage from "./utils/statusMessageSender"
+// import sendStatusMessage from "./utils/statusMessageSender"
+import { checkCache } from "../background/utils/cacheHandler"
+import { isValidVod } from "../content-script/utils/utils"
 
 const Popup = (): JSX.Element => {
   const [message, setMessage] = useState("Loading...")
@@ -23,7 +25,10 @@ const Popup = (): JSX.Element => {
    * this means content script doesn't need error info, fix that.
    * * Remove error storage in content script - it just needs to know whether to run skips or not
    * * Bg script doesn't need to send anything specific to content script
-   * ! Fix tests to not need that stupid timeout bs
+   *
+   * ! Remove all the error message stuff from content script,
+   * ! Fix tests to not need that stupid timeout bs, and done!
+   *
    */
   useEffect(() => {
     void (async () => {
@@ -32,15 +37,28 @@ const Popup = (): JSX.Element => {
         active: true,
       })
       const currentTab = tabs[0]
+      const vodId = isValidVod(currentTab.url ?? "")
 
-      if (currentTab?.id === undefined) {
+      if (currentTab?.id === undefined || vodId === false) {
         setMessage("No vod detected.")
         return
       }
 
-      const result = await sendStatusMessage(currentTab.id)
+      const cachedObject = await checkCache(vodId)
+      if (cachedObject !== undefined) {
+        const { error, hasSegments, numSegments } = cachedObject.metadata
 
-      setMessage(result)
+        if (error !== "") {
+          setMessage(error)
+          return
+        }
+
+        setMessage(
+          `This vod has ${hasSegments ? numSegments : "no"} muted segment${
+            numSegments === 1 ? "" : "s"
+          }.`,
+        )
+      }
     })()
   }, [])
 

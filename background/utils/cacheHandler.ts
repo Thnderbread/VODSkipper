@@ -1,5 +1,5 @@
 import browser from "webextension-polyfill"
-import type { CacheObject, MutedVodSegment } from "../../types"
+import type { CacheObject, CacheObjectLiteral } from "../../types"
 
 /**
  * Caches vod segments with the browser's session storage api.
@@ -18,7 +18,7 @@ export async function cacheSegments(data: CacheObject): Promise<void> {
  */
 export async function checkCache(
   key: string,
-): Promise<MutedVodSegment[] | undefined> {
+): Promise<CacheObjectLiteral | undefined> {
   const cached: CacheObject = await browser.storage.session.get(key)
   return cached[key]
 }
