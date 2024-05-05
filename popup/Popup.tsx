@@ -1,43 +1,21 @@
 import browser from "webextension-polyfill"
+import parseMetadata from "./utils/parseMetadata"
 import React, { useEffect, useState } from "react"
-// import sendStatusMessage from "./utils/statusMessageSender"
-import { checkCache } from "../background/utils/cacheHandler"
+import type { CacheObjectLiteral } from "../types"
 import { isValidVod } from "../content-script/utils/utils"
+import { checkCache } from "../background/utils/cacheHandler"
 
 const Popup = (): JSX.Element => {
   const [message, setMessage] = useState("Loading...")
 
-  /**
-   * Concerns:
-   *
-   * Popup fetches when it wants
-   * Some way to show registered errors. (Send from bg script?)
-   * Some mechanism for when content script isn't ready (storage listener?)
-   *
-   * Change the storage mechanism:
-   *  Stores the segments and vod metadata, like: {
-   *    error: message (or maybe status code & message as object or tuple?),
-   *    muted_segments: true,
-   *    num_segments: foo,
-   * }
-   *    segments: segments_array
-   * on each mount, just check the storage joint for needed info.
-   * this means content script doesn't need error info, fix that.
-   * * Remove error storage in content script - it just needs to know whether to run skips or not
-   * * Bg script doesn't need to send anything specific to content script
-   *
-   * ! Remove all the error message stuff from content script,
-   * ! Fix tests to not need that stupid timeout bs, and done!
-   *
-   */
   useEffect(() => {
-    void (async () => {
+    async function displayInfo(): Promise<void> {
       const tabs = await browser.tabs.query({
         url: "https://www.twitch.tv/videos/*",
         active: true,
       })
       const currentTab = tabs[0]
-      const vodId = isValidVod(currentTab.url ?? "")
+      const vodId = isValidVod(currentTab?.url ?? "")
 
       if (currentTab?.id === undefined || vodId === false) {
         setMessage("No vod detected.")
@@ -45,21 +23,29 @@ const Popup = (): JSX.Element => {
       }
 
       const cachedObject = await checkCache(vodId)
-      if (cachedObject !== undefined) {
-        const { error, hasSegments, numSegments } = cachedObject.metadata
-
-        if (error !== "") {
-          setMessage(error)
-          return
-        }
-
-        setMessage(
-          `This vod has ${hasSegments ? numSegments : "no"} muted segment${
-            numSegments === 1 ? "" : "s"
-          }.`,
-        )
+      if (cachedObject?.metadata !== undefined) {
+        const displayString = parseMetadata(cachedObject)
+        setMessage(displayString)
+        return
       }
-    })()
+
+      const handler = (
+        changes: Record<string, browser.Storage.StorageChange>,
+        area: string,
+      ): void => {
+        if (area === "session") {
+          const cachedObject = changes[vodId]
+            .newValue satisfies CacheObjectLiteral as CacheObjectLiteral
+
+          const displayString = parseMetadata(cachedObject)
+          setMessage(displayString)
+        }
+        browser.storage.onChanged.removeListener(handler)
+      }
+
+      browser.storage.onChanged.addListener(handler)
+    }
+    void displayInfo()
   }, [])
 
   return (

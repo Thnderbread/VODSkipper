@@ -45,7 +45,6 @@ export async function fetchVodData(
     const metadata = {
       error: "",
       numSegments: 0,
-      hasSegments: false,
     }
     /**
      * 404 responses mean there's no segments for the given vod.
@@ -56,7 +55,6 @@ export async function fetchVodData(
       clearTimeout(requestTimeout)
       const data = await response.json()
 
-      metadata.hasSegments = true
       metadata.numSegments = data.segments.length
       await cacheSegments({ [vodID]: { metadata, segments: data.segments } })
 
@@ -88,7 +86,6 @@ export async function fetchVodData(
         break
     }
     const metadata = {
-      hasSegments: false,
       error: errorState,
       numSegments: 0,
     }

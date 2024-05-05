@@ -1,12 +1,14 @@
 import browser from "webextension-polyfill"
 import { fetchVodData } from "./fetchVodData"
 import type { GetDataMessage, ResponseCallback } from "../types"
+import { isValidVod } from "../content-script/utils/utils"
 
 async function handleContentScriptMessage(
-  { vodID }: GetDataMessage,
+  { vodUrl }: GetDataMessage,
   response: ResponseCallback,
 ): Promise<boolean | undefined> {
-  if (typeof vodID !== "string") {
+  const vodID = isValidVod(vodUrl)
+  if (vodID === false) {
     console.warn("Invalid data received.")
     response({ data: undefined })
     return true
