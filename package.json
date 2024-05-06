@@ -62,7 +62,7 @@
   "devDependencies": {
     "@mocks-server/main": "^4.1.0",
     "@testing-library/react": "^15.0.5",
-    "@types/chrome": "^0.0.261",
+    "@types/chrome": "^0.0.267",
     "@types/node": "^20.10.1",
     "@types/react": "^18.2.34",
     "@types/webextension-polyfill": "^0.10.1",
