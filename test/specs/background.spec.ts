@@ -15,7 +15,7 @@ describe("VODSkipper background tests", () => {
     }
   })
 
-  it("Background - Should cache the vod responses properly", async () => {
+  it("segments - Should cache the vod responses properly", async () => {
     await browser.url(fixtures.mutedVodUrl)
     await browser.newWindow(fixtures.unmutedVodUrl)
 

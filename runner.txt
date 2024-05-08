@@ -1,8 +1,0 @@
-this._server is made: [object Object]
-Thing: BACKGROUND
-this._server is made: [object Object]
-Thing: BACKGROUND
-this._server is made: [object Object]
-Thing: BACKGROUND
-this._server is made: [object Object]
-Thing: BACKGROUND
