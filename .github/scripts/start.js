@@ -8,6 +8,7 @@ import { remote } from 'webdriverio'
 
 import pkg from '../../package.json' assert { type: 'json' }
 
+const vod = '1780240732'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 /**
@@ -45,7 +46,7 @@ async function startBrowser(browserName) {
     capabilities
   })
 
-  const vodUrl = 'https://www.twitch.tv/videos/1780240732'
+  const vodUrl = `https://www.twitch.tv/videos/${vod}`
 
   const debuggingUrls = {
     "edge": 'edge://extensions/',

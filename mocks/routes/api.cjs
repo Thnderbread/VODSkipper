@@ -1,7 +1,7 @@
 const SEGMENTS = require("../fixtures/segments.cjs")
 
 const SEGMENTS_MAP = new Map()
-SEGMENTS_MAP.set("2050655749", []) // segments for an unmuted vod
+SEGMENTS_MAP.set("2111779905", []) // segments for an unmuted vod
 SEGMENTS_MAP.set("1780240732", SEGMENTS[0]) // segments for a muted vod
 
 module.exports = [
@@ -17,7 +17,7 @@ module.exports = [
           middleware: (req, res) => {
             const vodID = req.params.id
             const segments = SEGMENTS_MAP.get(vodID)
-            if (segments) {
+            if (segments && segments.length > 0) {
               res.status(200).json({ segments })
             } else {
               res.sendStatus(404)

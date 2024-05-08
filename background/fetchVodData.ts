@@ -29,13 +29,20 @@ export async function fetchVodData(
   const endpoint = BASE_URL + vodID
   const controller = new AbortController()
 
+  // ! Remove this
+  console.log("Beginning fetch operations.")
+
   const cachedResponse = await checkCache(vodID)
   if (cachedResponse?.metadata.error === "") {
     // If a response was cached, and there was no issue w/ request,
     // go ahead and pass it to content script.
+    // ! Remove this
+    console.log(`Found a cached response: ${JSON.stringify(cachedResponse)}`)
     return { success: true, data: cachedResponse.segments }
   }
 
+  // ! Remove this
+  console.log("Nothing found in cache, fetching")
   const requestTimeout = setTimeout(() => {
     console.log("Request too long, aborting")
     controller.abort()
@@ -58,6 +65,11 @@ export async function fetchVodData(
       metadata.numSegments = data.segments.length
       await cacheSegments({ [vodID]: { metadata, segments: data.segments } })
 
+      console.log(
+        `Response was good, cached this: ${JSON.stringify(
+          await checkCache(vodID),
+        )}`,
+      )
       return { success: true, data: data.segments }
     } else if (response.status === 404) {
       clearTimeout(requestTimeout)

@@ -21,6 +21,8 @@ function runTest(testCommand, server = null) {
   return new Promise((resolve, reject) => {
     const sub = spawn(npxExecutable, args)
     let inResultsBlock = false
+    let testComplete = false
+    let lastError = ""
 
     sub.on('error', (error) => {
       logger.error('Subprocess error: ', error)
@@ -28,40 +30,45 @@ function runTest(testCommand, server = null) {
     })
 
     sub.stdout.on('data', (data) => {
-      if (data.includes('"spec" Reporter:')) {
-        inResultsBlock = true
-      }
+      logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
+      // if (data.includes('"spec" Reporter:')) {
+      //   inResultsBlock = true
+      // }
 
-      if (inResultsBlock) {
-        logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
-      }
+      // if (inResultsBlock) {
+      //   logger.info(`\b[${wdioPrefix}] ${data.toString()}`)
+      // }
 
-      if (data.includes('Spec Files:')) {
-        inResultsBlock = false
-      }
+      // if (data.includes('Spec Files:')) {
+      //   inResultsBlock = false
+      // }
     })
 
     sub.stderr.on('data', (data) => {
-      if (data.includes('"spec" Reporter:')) {
-        inResultsBlock = true
-      }
+      logger.error(`\b[${wdioPrefix}] ${data.toString()}`)
+      // lastError = data.toString()
+      // if (data.includes('"spec" Reporter:')) {
+      //   inResultsBlock = true
+      //   testComplete = true
+      // }
 
-      if (inResultsBlock) {
-        logger.error(`\b[${wdioPrefix}] ${data.toString()}`)
-      }
+      // if (inResultsBlock) {
+      //   logger.error(`\b[${wdioPrefix}] ${data.toString()}`)
+      // }
 
-      if (data.includes('Spec Files:')) {
-        inResultsBlock = false
-      }
+      // if (data.includes('Spec Files:')) {
+      //   inResultsBlock = false
+      // }
     })
 
     sub.on('close', (code) => {
       if (code === 0) {
-        logger.info(`Subprocess exited with code ${code}`)
+        logger.info(`Subprocess exited with code ${code}.`)
         resolve()
         return
       } else {
-        logger.error(`Subprocess exited with code ${code}`)
+        if (lastError !== "" && !testComplete) logger.error(lastError)
+        logger.error(`Subprocess exited with code ${code}.`)
         reject()
         return
       }

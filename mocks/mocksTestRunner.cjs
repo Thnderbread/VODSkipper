@@ -10,6 +10,22 @@ const wdioTestFile = path.join(__dirname, '..', 'wdio.test.conf.ts')
 
 const server = createServer()
 
+/**
+ * Promise.all for this stuff? Probably need a wrapper thingy
+ * Needs to start the server, run the test, stop the server
+ * Or, maybe there's a way to start the server & switch it
+ * programmatically
+ * 
+ * Maybe something that takes in server instance and changes
+ * collections thingy before / in between running tests
+ * 
+ * Class that takes in Server instance and array that has all test types (bg, content)
+ * Class can parse all the test types and create async functions for them
+ * those async functions can modify the classes server instance directly & set collections
+ * 
+ * running w/o args will run all tests in config file
+ * 
+ */
 if (test === 'background') {
   let exitCode
   server.start().then(async () => {
@@ -49,7 +65,7 @@ if (test === 'background') {
       await runTest(`wdio run ${wdioTestFile} TIMEOUT`, server)
 
       // segments > 0 / segments === 0 messages
-      server.logger.info("Running 'actual' test specs...")
+      server.logger.info("Running 'real' test specs...")
       await server.mock.collections.select("segments", { check: true })
       await runTest(`wdio run ${wdioTestFile} SEGMENTS`, server)
 
@@ -85,3 +101,25 @@ if (test === 'background') {
 } else {
   throw new Error(`Unsupported test type: ${test}.`)
 }
+
+// test factory fn that takes collection & test command
+//   
+// for each test type, run
+// timers? one per or just one?
+// for test of args:
+/**
+ * create test context
+ * - context knows which server collection(s) it needs
+ * - pass in some object that maps suites to collections?
+ * -  
+ */
+class TestRunner { }
+
+/**
+ * Need some way to start mocks server before all tests
+ * Before suite is where collections can be swapped
+ * WorkerService class can just create a server instance and
+ * hold it internally, singleton style
+ * 
+ * then before each suite it can change the collection accordingly
+ */
