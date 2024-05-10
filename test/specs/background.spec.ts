@@ -55,12 +55,7 @@ describe("VODSkipper background tests", () => {
 
           const mutedSegments = mutedSegmentsObj[mutedVodID]
           const unmutedSegments = unmutedSegmentsObj[unmutedVodID]
-          // ! Remove this
-          console.log(
-            `Muted: ${JSON.stringify(
-              mutedSegments,
-            )}\n\nUnmuted: ${JSON.stringify(unmutedSegments)}`,
-          )
+
           done({ mutedSegments, unmutedSegments })
         },
         fixtures.mutedVodID,

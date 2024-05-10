@@ -1,6 +1,6 @@
 import handleAd from "../helpers/handleAd.js"
 import { browser, $, expect } from "@wdio/globals"
-import { SEGMENTS, mutedVodUrl } from "../fixtures/vodStuff.js"
+import { MUTED_SEGMENT_DATA, mutedVodUrl } from "../fixtures/vodStuff.js"
 
 interface SkipResult {
   currentTime: number
@@ -44,7 +44,7 @@ describe("VODSkipper content script tests", () => {
     await browser.refresh()
   })
 
-  it("Should skip each detected segment in order", async () => {
+  it("segments - Should skip each detected segment in order", async () => {
     const results: SkipResult[] = await browser.executeAsync(
       async (segments, delay, beforeSkipOffset, done) => {
         const video = document.querySelector("video")
@@ -59,7 +59,7 @@ describe("VODSkipper content script tests", () => {
         }
         done(results)
       },
-      SEGMENTS,
+      MUTED_SEGMENT_DATA.segments,
       delaySkipCheck,
       rightBeforeSkip,
     )
@@ -71,8 +71,8 @@ describe("VODSkipper content script tests", () => {
     )
   })
 
-  it("Should properly skip a segment preceding one it's just skipped", async () => {
-    const [precedingSegment, laterSegment] = SEGMENTS
+  it("segments - segments - Should properly skip a segment preceding one it's just skipped", async () => {
+    const [precedingSegment, laterSegment] = MUTED_SEGMENT_DATA.segments
 
     const results: SkipResult[][] = await browser.executeAsync(
       async (preceding, later, delay, done) => {
@@ -123,7 +123,7 @@ describe("VODSkipper content script tests", () => {
     )
   })
 
-  it("Should skip past a segment it's in the middle of", async () => {
+  it("segments - segments - Should skip past a segment it's in the middle of", async () => {
     const results: SkipResult[] = await browser.executeAsync(
       async (segments, delay, done) => {
         const video = document.querySelector("video")
@@ -139,7 +139,7 @@ describe("VODSkipper content script tests", () => {
 
         done(results)
       },
-      SEGMENTS,
+      MUTED_SEGMENT_DATA.segments,
       delaySkipCheck,
     )
     // A js error can occur and the test can return an empty array,
@@ -150,7 +150,7 @@ describe("VODSkipper content script tests", () => {
     )
   })
 
-  it("Shouldn't skip ahead when the video is paused right before a segment", async () => {
+  it("segments - Shouldn't skip ahead when the video is paused right before a segment", async () => {
     const results: SkipResult[][] = await browser.executeAsync(
       async (segments, delay, done) => {
         const video = document.querySelector("video")
@@ -175,7 +175,7 @@ describe("VODSkipper content script tests", () => {
         playTester.push({ currentTime: video.currentTime, endingOffset })
         done([pauseTester, playTester])
       },
-      SEGMENTS,
+      MUTED_SEGMENT_DATA.segments,
       delaySkipCheck,
     )
 

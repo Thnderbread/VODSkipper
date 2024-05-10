@@ -1,8 +1,8 @@
 import path from "path"
+import fs from "fs/promises"
+import MocksWorkerService from "./MocksService.js"
 import type { Options, Services } from "@wdio/types"
 import pkg from "./package.json" assert { type: "json" }
-import fs from "fs/promises"
-import MocksWorkerService from "./MocksService.mjs"
 
 export const config: Options.Testrunner = {
   autoCompileOpts: {
@@ -31,10 +31,8 @@ export const config: Options.Testrunner = {
   specs: ["./test/specs/**/*.spec.ts"],
   suites: {
     content: ["./test/specs/content.spec.ts"],
-    background: ["./test/specs/background.cache.spec.ts"],
-    popupTimeout: ["./test/specs/popup.timeout.spec.ts"],
-    popupSegments: ["./test/specs/popup.segments.spec.ts"],
-    popupServerless: ["./test/specs/popup.serverless.spec.ts"],
+    popupSegments: ["./test/specs/popup.spec.ts"],
+    background: ["./test/specs/background.spec.ts"],
   },
   // Patterns to exclude.
   exclude: [],

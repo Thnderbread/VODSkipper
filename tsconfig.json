@@ -36,6 +36,7 @@
     "background",
     "test/fixtures",
     "content-script",
+    "MocksService.ts"
   ],
   "references": [
     {

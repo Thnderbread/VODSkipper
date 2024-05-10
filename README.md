@@ -12,11 +12,25 @@ Install dependencies via:
 npm install
 ```
 
+Bundle the extension:
+
+```sh
+npm run bundle-dev
+```
+
 Start the dummy server:
 
 ```sh
 npm run mocks
 ```
+
+You can use make to switch the current collection set on the server:
+
+```sh
+make switch-collection COLLECTION=<desired-collection>
+```
+
+The available collections are 'segments' (default), 'server_timeout', and 'server_failure'.
 
 then start a browser with the web extension installed:
 
@@ -55,6 +69,8 @@ To load the extension in Firefox go to `about:debugging#/runtime/this-firefox` o
 #### Load in Chrome
 
 To load the extensions in Google Chrome go to `chrome://extensions/` and click `Load unpacked`. Locate the dist directory and select `manifest.json`.
+
+Typically, bundle-dev will be sufficient and is preferred over build.
 
 ### Test
 
