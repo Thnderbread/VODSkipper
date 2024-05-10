@@ -1,4 +1,6 @@
-module.exports = [
+import type { Collection } from "mocks-server-lite"
+
+const collections: Collection[] = [
   {
     id: "segments",
     routes: ["get-segments:real"],
@@ -12,3 +14,5 @@ module.exports = [
     routes: ["get-server_timeout:disabled"],
   },
 ]
+
+export default collections

@@ -14,7 +14,7 @@ export default defineConfig({
     lib: {
       formats: ["iife"],
       entry: path.resolve(__dirname, "content-script", "index.tsx"),
-      name: "Cat Facts",
+      name: "Vodskipper",
     },
     rollupOptions: {
       output: {

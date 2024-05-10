@@ -1,18 +1,14 @@
 export type ResponseCallback = <T>(data: T) => void
 
-export type ShouldMakeListenerResponse = DecisionCodes
-
 /**
  * The response from contacting the api for segments.
  */
 export type MutedSegmentResponse =
   | {
-      error?: never
       success: true
       data: MutedVodSegment[]
     }
   | {
-      error: Error
       success: false
       data?: never
     }
@@ -21,7 +17,7 @@ export type MutedSegmentResponse =
  * Represents what is cached in the browser's session storage.
  * Key is the vod's id.
  */
-export type CacheObject = Record<string, MutedVodSegment[]>
+export type CacheObject = Record<string, CacheObjectLiteral>
 
 /**
  * Whether or not a listener should be created.
@@ -33,22 +29,34 @@ export enum DecisionCodes {
 }
 
 /**
- * Message to the content script
- * from the popup checking for any errors
- * that occurred during segment data fetching.
+ * All the possible resolutions of
+ * fetching vod data from the api.
+ * Used to determine whether or not
+ * to retry a request later.
  */
-export interface StatusMessage {
-  data: "getStatus"
+export enum FetchResolutions {
+  /** Api error. */
+  INTERNAL_SERVER_ERROR = "Something went wrong with the server.",
+  /** No idea what happened. Likely client side. */
+  UNEXPECTED_ERROR = "Unexpected error occurred.",
+  /** Long running request was aborted. */
+  TIMEOUT_ERROR = "Server request timed out.",
+  /** Usually some fetch-specific error, like CORS. Logs as a type error. */
+  TYPE_ERROR = "Couldn't contact server.",
+}
+
+export interface CacheObjectLiteral {
+  metadata: Metadata
+  segments: MutedVodSegment[]
 }
 
 /**
- * Response from the content script
- * to the popup checking for any errors
- * that occurred during segment data fetching.
+ * Holds some metadata about the vod that will be useful
+ * to the popup.
  */
-export interface StatusMessageResponse {
-  segmentLength: number | null
-  error: string | null
+export interface Metadata {
+  numSegments: number
+  error: string
 }
 
 /**
@@ -73,7 +81,7 @@ export interface ApiResponse {
  */
 export interface GetDataMessage {
   action: "getData"
-  vodID: string
+  vodUrl: string
 }
 
 /**
@@ -81,8 +89,7 @@ export interface GetDataMessage {
  * to the content script for segment data.
  */
 export interface GetDataResponse {
-  data: MutedVodSegment[]
-  error: string | null
+  data?: MutedVodSegment[]
 }
 
 /**
@@ -105,24 +112,3 @@ export interface MutedVodSegment {
 export interface DefaultVodSegment extends MutedVodSegment {
   default: boolean
 }
-
-export interface State {
-  /**
-   * Any Errors that occur in the BG script.
-   */
-  error: string
-  /**
-   * The nearest muted segment to be skipped.
-   */
-  nearestSegment: MutedVodSegment
-  /**
-   * All of the muted segments for the vod.
-   */
-  mutedSegments: MutedVodSegment[]
-}
-
-// TODO: Set error payload to be specific strings.
-export type Action =
-  | { type: "SET_ERROR"; payload: string }
-  | { type: "SET_NEAREST"; payload: MutedVodSegment }
-  | { type: "SET_MUTED_SEGMENTS"; payload: MutedVodSegment[] }

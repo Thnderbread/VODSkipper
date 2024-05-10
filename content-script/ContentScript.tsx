@@ -1,165 +1,82 @@
 import type React from "react"
-import reducer from "./reducer"
 import browser from "webextension-polyfill"
-import DEFAULTSEGMENT from "../common/DefaultSegment"
-import { useState, useEffect, useReducer, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
-  type State,
   DecisionCodes,
-  type StatusMessage,
   type GetDataResponse,
-  type ResponseCallback,
+  type MutedVodSegment,
 } from "../types"
 import {
-  isValidVod,
   createListener,
   shouldCreateListener,
   findNearestMutedSegment,
 } from "./utils/utils"
 
-const initialState: State = {
-  error: "",
-  mutedSegments: [],
-  nearestSegment: DEFAULTSEGMENT,
-}
-
 const ContentScript: React.FC = () => {
-  const [loaded, setLoaded] = useState(false)
-  const [state, dispatch] = useReducer(reducer, initialState)
   const listener = useRef<NodeJS.Timeout | undefined>(undefined)
+  const [mutedSegments, setMutedSegments] = useState<MutedVodSegment[]>([])
 
-  const vodID = isValidVod(document.location.href)
   const video = document.querySelector("video")
 
-  if (vodID === false || video === null) {
-    dispatch({ type: "SET_ERROR", payload: "No vod detected." })
-    return null
-  }
-
-  const seekedHandler = (): void => {
-    clearTimeout(listener.current)
-    const nearest = findNearestMutedSegment(
-      video.currentTime,
-      state.mutedSegments,
-    )
-    dispatch({ type: "SET_NEAREST", payload: nearest })
-  }
-
-  const playingHandler = (): void => {
-    const { nearestSegment } = state
-    if (shouldCreateListener({ nearestSegment }) === DecisionCodes.Create) {
-      listener.current = createListener(
-        nearestSegment.startingOffset,
-        nearestSegment.endingOffset,
-        video,
-      )
-    }
-  }
-
-  const pauseHandler = (): void => {
-    clearTimeout(listener.current)
-    listener.current = undefined
-  }
-
-  const setupVideoListeners = (): void => {
-    video.addEventListener("playing", playingHandler)
-    video.addEventListener("seeked", seekedHandler)
-    video.addEventListener("pause", pauseHandler)
-  }
-
-  const tearDownVideoListeners = (): void => {
-    video.removeEventListener("playing", playingHandler)
-    video.removeEventListener("seeked", seekedHandler)
-    video.removeEventListener("pause", pauseHandler)
-
-    clearTimeout(listener.current)
-    listener.current = undefined
-  }
-
-  // On mount useEffect
+  // Runs on url changes to account for Twitch's SPA behavior
   useEffect(() => {
-    void (async () => {
-      const { data, error }: GetDataResponse =
-        await browser.runtime.sendMessage({ action: "getData", vodID })
-      if (error !== null) {
-        dispatch({ type: "SET_ERROR", payload: error })
-        setLoaded(true)
-      } else if (data.length === 0) {
-        /**
-         * Returning if there's no data
-         * since initial reducer state
-         * has dummy data
-         */
-        setLoaded(true)
-      } else {
-        console.log(`Found ${data.length} muted segments for vod ${vodID}.`)
-        dispatch({ type: "SET_MUTED_SEGMENTS", payload: data })
-        setLoaded(true)
+    async function fetchDataAndSetSegments(): Promise<void> {
+      const { data }: GetDataResponse = await browser.runtime.sendMessage({
+        action: "getData",
+        vodUrl: document.location.href,
+      })
+      if (data !== undefined && data?.length > 0) {
+        console.log(`Found ${data.length} muted segments this vod.`)
+        setMutedSegments(data)
       }
-    })()
+    }
+    void fetchDataAndSetSegments()
+  }, [document.location.href])
+
+  // Set up listeners once muted segments are set
+  useEffect(() => {
+    if (video === null) return
+
+    const playingHandler = (): void => {
+      clearTimeout(listener.current)
+      const nearest = findNearestMutedSegment(video.currentTime, mutedSegments)
+
+      if (
+        shouldCreateListener({ nearestSegment: nearest }) ===
+        DecisionCodes.Create
+      ) {
+        listener.current = createListener(
+          nearest.startingOffset,
+          nearest.endingOffset,
+          video,
+        )
+      }
+    }
+
+    const pauseHandler = (): void => {
+      clearTimeout(listener.current)
+      listener.current = undefined
+    }
+
+    const setupVideoListeners = (): void => {
+      video.addEventListener("playing", playingHandler)
+      video.addEventListener("pause", pauseHandler)
+    }
+
+    const tearDownVideoListeners = (): void => {
+      video.removeEventListener("playing", playingHandler)
+      video.removeEventListener("pause", pauseHandler)
+
+      clearTimeout(listener.current)
+      listener.current = undefined
+    }
+
+    setupVideoListeners()
 
     return () => {
       tearDownVideoListeners()
     }
-  }, [])
-
-  // finished loading useEffect
-  useEffect(() => {
-    const { mutedSegments } = state
-    if (loaded) {
-      /**
-       * Setting up this listener here so
-       * that it's only reading freshly
-       * processed data
-       */
-      const statusMessageListener = (
-        msg: StatusMessage,
-        sender: browser.Runtime.MessageSender,
-        response: ResponseCallback,
-      ): void => {
-        if (state.error !== "") {
-          response({ error: state.error })
-        } else {
-          response({ segmentLength: state.mutedSegments.length })
-        }
-      }
-      /**
-       * If this vod has no muted segments, then no listeners
-       * should be created. Otherwise, there could potentially be a
-       * case where the page loads past all segments, but
-       * the user seeks to segments earlier in the vod.
-       * Checking for "=== create" might not create listeners in
-       * this case.
-       */
-      if (
-        shouldCreateListener({ mutedSegments }) !==
-        DecisionCodes.NoMutedSegments
-      ) {
-        setupVideoListeners()
-      }
-      browser.runtime.onMessage.addListener(statusMessageListener)
-
-      return () => {
-        browser.runtime.onMessage.removeListener(statusMessageListener)
-      }
-    }
-  }, [loaded])
-
-  /**
-   * Re-establish the playing handler when
-   * A new nearest segment is set by the seek handler
-   */
-  useEffect(() => {
-    const { nearestSegment } = state
-    if (shouldCreateListener({ nearestSegment }) !== DecisionCodes.Create) {
-      return
-    }
-    video.addEventListener("playing", playingHandler)
-
-    return () => {
-      video.removeEventListener("playing", playingHandler)
-    }
-  }, [state.nearestSegment])
+  }, [mutedSegments])
 
   return null
 }

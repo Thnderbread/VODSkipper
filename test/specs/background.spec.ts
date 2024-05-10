@@ -1,6 +1,6 @@
-import { MutedVodSegment } from "../../types"
 import { browser, $, expect } from "@wdio/globals"
 import * as fixtures from "../fixtures/vodStuff.js"
+import { CacheObject, CacheObjectLiteral } from "../../types"
 
 describe("VODSkipper background tests", () => {
   before(async () => {
@@ -14,7 +14,8 @@ describe("VODSkipper background tests", () => {
       await browser.url("https://google.com")
     }
   })
-  it("Should cache the vod responses properly", async () => {
+
+  it("segments - Should cache the vod responses properly", async () => {
     await browser.url(fixtures.mutedVodUrl)
     await browser.newWindow(fixtures.unmutedVodUrl)
 
@@ -42,26 +43,26 @@ describe("VODSkipper background tests", () => {
       },
     )
 
-    const cached: Record<string, MutedVodSegment[]> =
+    const cached: Record<string, CacheObjectLiteral> =
       await browser.executeAsync(
         async (mutedVodID, unmutedVodID, done) => {
           // get an error when using webextension polyfill,
           // fortunately the chrome namespace works for both browsers here
-          const mutedSegmentsObj = await chrome.storage.session.get(mutedVodID)
-          const unmutedSegmentsObj = await chrome.storage.session.get(
-            unmutedVodID,
-          )
+          const mutedSegmentsObj: CacheObject =
+            await chrome.storage.session.get(mutedVodID)
+          const unmutedSegmentsObj: CacheObject =
+            await chrome.storage.session.get(unmutedVodID)
 
           const mutedSegments = mutedSegmentsObj[mutedVodID]
           const unmutedSegments = unmutedSegmentsObj[unmutedVodID]
+
           done({ mutedSegments, unmutedSegments })
         },
         fixtures.mutedVodID,
         fixtures.unmutedVodID,
       )
 
-    expect(cached.mutedSegments).toMatchObject(fixtures.SEGMENTS)
-    expect(cached.unmutedSegments).toBeInstanceOf(Array)
-    expect(cached.unmutedSegments).toHaveLength(0)
+    expect(cached.mutedSegments).toMatchObject(fixtures.MUTED_SEGMENT_DATA)
+    expect(cached.unmutedSegments).toMatchObject(fixtures.UNMUTED_SEGMENT_DATA)
   })
 })

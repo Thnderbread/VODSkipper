@@ -1,27 +1,51 @@
 import browser from "webextension-polyfill"
+import parseMetadata from "./utils/parseMetadata"
 import React, { useEffect, useState } from "react"
-import sendStatusMessage from "./utils/statusMessageSender"
+import type { CacheObjectLiteral } from "../types"
+import { isValidVod } from "../content-script/utils/utils"
+import { checkCache } from "../background/utils/cacheHandler"
 
 const Popup = (): JSX.Element => {
   const [message, setMessage] = useState("Loading...")
 
   useEffect(() => {
-    void (async () => {
+    async function displayInfo(): Promise<void> {
       const tabs = await browser.tabs.query({
         url: "https://www.twitch.tv/videos/*",
         active: true,
       })
       const currentTab = tabs[0]
+      const vodId = isValidVod(currentTab?.url ?? "")
 
-      if (currentTab?.id === undefined) {
+      if (currentTab?.id === undefined || vodId === false) {
         setMessage("No vod detected.")
         return
       }
 
-      const result = await sendStatusMessage(currentTab.id)
+      const cachedObject = await checkCache(vodId)
+      if (cachedObject?.metadata !== undefined) {
+        const displayString = parseMetadata(cachedObject)
+        setMessage(displayString)
+        return
+      }
 
-      setMessage(result)
-    })()
+      const handler = (
+        changes: Record<string, browser.Storage.StorageChange>,
+        area: string,
+      ): void => {
+        if (area === "session") {
+          const cachedObject = changes[vodId]
+            .newValue satisfies CacheObjectLiteral as CacheObjectLiteral
+
+          const displayString = parseMetadata(cachedObject)
+          setMessage(displayString)
+        }
+        browser.storage.onChanged.removeListener(handler)
+      }
+
+      browser.storage.onChanged.addListener(handler)
+    }
+    void displayInfo()
   }, [])
 
   return (

@@ -1,10 +1,10 @@
 import path from "path"
-import type { Options } from "@wdio/types"
-import pkg from "./package.json" assert { type: "json" }
 import fs from "fs/promises"
+import MocksWorkerService from "./MocksService.js"
+import type { Options, Services } from "@wdio/types"
+import pkg from "./package.json" assert { type: "json" }
 
 export const config: Options.Testrunner = {
-  //
   autoCompileOpts: {
     autoCompile: true,
     tsNodeOpts: {
@@ -31,10 +31,8 @@ export const config: Options.Testrunner = {
   specs: ["./test/specs/**/*.spec.ts"],
   suites: {
     content: ["./test/specs/content.spec.ts"],
-    background: ["./test/specs/background.cache.spec.ts"],
-    popupTimeout: ["./test/specs/popup.timeout.spec.ts"],
-    popupSegments: ["./test/specs/popup.segments.spec.ts"],
-    popupServerless: ["./test/specs/popup.serverless.spec.ts"],
+    popupSegments: ["./test/specs/popup.spec.ts"],
+    background: ["./test/specs/background.spec.ts"],
   },
   // Patterns to exclude.
   exclude: [],
@@ -114,13 +112,15 @@ export const config: Options.Testrunner = {
       {
         // trying to optimize firefox performance a bit
         extensions: [path.join(`vodskipper-firefox-v${pkg.version}.xpi`)],
-        "xpinstall.signatures.required": false,
+        "webgl.disabled": true,
         "browser.tab.animate": false,
         "browser.panorama.animate_zoom": false,
-        "webgl.disabled": true,
+        "xpinstall.signatures.required": false,
         "browser.startup.homepage": "https://google.com",
       },
     ],
+    //@ts-ignore
+    [MocksWorkerService],
   ],
 
   // Framework you want to run your specs with.

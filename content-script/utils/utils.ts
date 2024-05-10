@@ -3,7 +3,7 @@ import type {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   SegmentInfo,
   MutedVodSegment,
-  ShouldMakeListenerResponse,
+  DecisionCodes,
 } from "../../types"
 
 /**
@@ -98,7 +98,7 @@ export function createListener(
 export function shouldCreateListener(segmentInfo: {
   nearestSegment?: MutedVodSegment
   mutedSegments?: MutedVodSegment[]
-}): ShouldMakeListenerResponse {
+}): DecisionCodes {
   if (Object.entries(segmentInfo).length === 0) {
     throw new Error("No data given.")
   }
@@ -108,7 +108,7 @@ export function shouldCreateListener(segmentInfo: {
         return 1
       }
     } else if (k === "nearestSegment") {
-      if (Object.hasOwnProperty.call(v, "default")) {
+      if (Object.hasOwn(v, "default")) {
         return 2
       }
     }
@@ -122,12 +122,14 @@ export function shouldCreateListener(segmentInfo: {
  * @returns {string | false} The vod id from the page if valid. False if not.
  */
 export function isValidVod(vodUrl: string): string | false {
+  // covers urls like: https://www.twitch.tv/videos/2111779905?filter=highlights&sort=time
   const validVodRegex = /https:\/\/www.twitch.tv\/videos\/\d{8,}/
+  // extract the vod id
   const vodIdRegex = /\d{8,}/
-  return (
-    typeof vodUrl === "string" &&
+  const matchResult = vodUrl.match(vodIdRegex)
+  return typeof vodUrl === "string" &&
     validVodRegex.test(vodUrl) &&
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    vodUrl.match(vodIdRegex)![0]
-  )
+    matchResult !== null
+    ? matchResult[0]
+    : false
 }
