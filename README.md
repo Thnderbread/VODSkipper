@@ -87,9 +87,9 @@ This will bundle the extension before running all the tests sequentially.
 Run specific tests:
 
 ```sh
+npm run test:bg
 npm run test:popup
 npm run test:content
-npm run test:background
 ```
 
 When making changes in-between tests, run:
