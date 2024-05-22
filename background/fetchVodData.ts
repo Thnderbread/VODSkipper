@@ -30,7 +30,7 @@ export async function fetchVodData(
   const controller = new AbortController()
 
   const cachedResponse = await checkCache(vodID)
-  if (cachedResponse?.metadata.error === "") {
+  if (cachedResponse?.metadata?.error === "") {
     // If a response was cached, and there was no issue w/ request,
     // go ahead and pass it to content script.
     return { success: true, data: cachedResponse.segments }
@@ -64,6 +64,7 @@ export async function fetchVodData(
       await cacheSegments({ [vodID]: { metadata, segments: [] } })
       return { success: true, data: [] }
     } else {
+      clearTimeout(requestTimeout)
       metadata.error = FetchResolutions.INTERNAL_SERVER_ERROR
       await cacheSegments({ [vodID]: { metadata, segments: [] } })
       return { success: false }

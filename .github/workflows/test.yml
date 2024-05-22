@@ -13,9 +13,9 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v2
       - name: Install
-        run: npm ci
+        run: npm install
       - name: Bundle
-        run: npm run bundle
+        run: npm run bundle-dev
       - name: Test
         run: npm run test
       - uses: actions/upload-artifact@v3

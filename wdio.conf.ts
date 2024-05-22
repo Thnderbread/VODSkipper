@@ -1,7 +1,7 @@
 import path from "path"
 import fs from "fs/promises"
+import type { Options } from "@wdio/types"
 import MocksWorkerService from "./MocksService.js"
-import type { Options, Services } from "@wdio/types"
 import pkg from "./package.json" assert { type: "json" }
 
 export const config: Options.Testrunner = {
@@ -30,8 +30,8 @@ export const config: Options.Testrunner = {
   //
   specs: ["./test/specs/**/*.spec.ts"],
   suites: {
+    popup: ["./test/specs/popup.spec.ts"],
     content: ["./test/specs/content.spec.ts"],
-    popupSegments: ["./test/specs/popup.spec.ts"],
     background: ["./test/specs/background.spec.ts"],
   },
   // Patterns to exclude.
@@ -66,7 +66,7 @@ export const config: Options.Testrunner = {
   // Define all options that are relevant for the WebdriverIO instance here
   //
   // Level of logging verbosity: trace | debug | info | warn | error | silent
-  logLevel: "info",
+  logLevel: "error",
   //
   // Set specific log levels per logger
   // loggers:
@@ -107,18 +107,6 @@ export const config: Options.Testrunner = {
   // your test setup with almost no effort. Unlike plugins, they don't add new
   // commands. Instead, they hook themselves up into the test process.
   services: [
-    [
-      "firefox-profile",
-      {
-        // trying to optimize firefox performance a bit
-        extensions: [path.join(`vodskipper-firefox-v${pkg.version}.xpi`)],
-        "webgl.disabled": true,
-        "browser.tab.animate": false,
-        "browser.panorama.animate_zoom": false,
-        "xpinstall.signatures.required": false,
-        "browser.startup.homepage": "https://google.com",
-      },
-    ],
     //@ts-ignore
     [MocksWorkerService],
   ],
@@ -132,10 +120,10 @@ export const config: Options.Testrunner = {
   framework: "mocha",
   //
   // The number of times to retry the entire specfile when it fails as a whole
-  // specFileRetries: 1,
+  specFileRetries: 1,
   //
   // Delay in seconds between the spec file retry attempts
-  // specFileRetriesDelay: 0,
+  specFileRetriesDelay: 2,
   //
   // Whether or not retried specfiles should be retried immediately or deferred to the end of the queue
   // specFileRetriesDeferred: false,

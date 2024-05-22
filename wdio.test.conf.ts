@@ -77,7 +77,7 @@ async function enableExtensionPermissions(
   }
 
   await this.url("about:addons")
-  // Give a second for stuff to lose
+  // Give a second for stuff to load
   await new Promise(r => setTimeout(r, 1000))
 
   const extensionButton = await this.$("span=Extensions")
@@ -94,7 +94,8 @@ async function enableExtensionPermissions(
   const permissionLabel = await permissionsContainer.shadow$("label")
 
   const toggleButton = await permissionLabel.$("button")
-  await toggleButton.click()
+  const pressed = !!(await toggleButton.getAttribute("aria-pressed"))
+  if (!pressed) await toggleButton.click()
 }
 
 async function lowerVideoQuality(this: WebdriverIO.Browser) {
@@ -163,19 +164,8 @@ declare global {
   }
 }
 
-const spec = process.argv.slice(-1).pop()
-if (!spec) throw new Error("Missing spec.")
-
-const specFiles = {
-  popup: ["./test/specs/popup.spec.ts"],
-  content: ["./test/specs/content.spec.ts"],
-  background: ["./test/specs/background.spec.ts"],
-}
-
 export const config: Options.Testrunner = {
   ...baseConfig,
-  specs: specFiles[spec],
-  logLevel: "trace",
   capabilities: [
     {
       browserName: "chrome",

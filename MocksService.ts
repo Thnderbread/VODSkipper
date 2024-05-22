@@ -1,4 +1,5 @@
 import routes from "./mocks/routes/index.js"
+import { SevereServiceError } from "webdriverio"
 import collections from "./mocks/collections.js"
 import type { Services, Frameworks } from "@wdio/types"
 import { createServer, type Server } from "mocks-server-lite"
@@ -16,26 +17,26 @@ type Collections = (typeof MocksCollections)[keyof typeof MocksCollections]
 
 class MocksWorkerService implements Services.ServiceInstance {
   private server: Server | null = null
-  private currentCollection: Collections = MocksCollections.SEGMENTS
-  private readonly mocksUrl = "http://localhost:3100/__set-collection"
+  private readonly mocksCollectionsUrl =
+    "http://localhost:3100/__set-collection"
 
   private getServerInstance(): void {
     try {
       this.server = createServer({
-        selected: this.currentCollection,
+        selected: MocksCollections.SEGMENTS,
         port: 3100,
       })
       void this.server.start({ routes, collections })
     } catch (error) {
       if (error instanceof Error) {
-        throw new Error(
+        throw new SevereServiceError(
           `some error happened while trying to create the server instance: ${error.message}\n`,
         )
       }
     }
   }
 
-  before(): void {
+  onPrepare(): void {
     this.getServerInstance()
   }
 
@@ -45,24 +46,22 @@ class MocksWorkerService implements Services.ServiceInstance {
       .trim()
       .toLowerCase() as Collections
 
-    if (collectionName !== this.currentCollection) {
-      await this.switchCollection(collectionName)
-    }
+    await this.switchCollection(collectionName)
   }
 
   /**
    * Switches the mocks collection.
    */
   private async switchCollection(collection: Collections): Promise<void> {
-    const response = await fetch(this.mocksUrl, {
+    const response = await fetch(this.mocksCollectionsUrl, {
       method: "POST",
       body: JSON.stringify({ collection }),
       headers: { "Content-Type": "application/json" },
     })
     if (!response.ok) {
-      throw new Error(`Error during fetch operation: ${await response.text()}`)
-    } else {
-      this.currentCollection = collection
+      throw new SevereServiceError(
+        `Error while trying to switch collection: ${await response.text()}`,
+      )
     }
   }
 }

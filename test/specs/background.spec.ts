@@ -1,12 +1,18 @@
+import wait from "../helpers/wait.js"
 import { browser, $, expect } from "@wdio/globals"
 import * as fixtures from "../fixtures/vodStuff.js"
+import loadingMessage from "../helpers/loadingMessage.js"
 import { CacheObject, CacheObjectLiteral } from "../../types"
 
 describe("VODSkipper background tests", () => {
-  before(async () => {
-    const browserName = (browser.capabilities as WebdriverIO.Capabilities)
-      .browserName
+  let browserName = (browser.capabilities as WebdriverIO.Capabilities)
+    .browserName
+  /**Amount of time to wait for popup's 'loading...' message to change */
+  const loadingDelay = 15000
+  /**Amount of time to wait for element to exist */
+  const elemExistDelay = 5000
 
+  before(async () => {
     if (browserName === "firefox") {
       await browser.enableExtensionPermissions("VodSkipper")
     } else if (browserName === "chrome") {
@@ -23,7 +29,7 @@ describe("VODSkipper background tests", () => {
     // so that background page can finish operations
     const video = await $("video")
     await video.waitForExist({
-      timeout: 5000,
+      timeout: elemExistDelay,
       interval: 1000,
       timeoutMsg: "Can't find video element.",
     })
@@ -32,14 +38,14 @@ describe("VODSkipper background tests", () => {
     await browser.openExtensionPopup("VodSkipper")
 
     const messageEl = await $("p")
-    await messageEl.waitForExist({ timeout: 5000 })
+    await messageEl.waitForExist({ timeout: elemExistDelay })
     await browser.waitUntil(
       async () => {
         return (await messageEl.getText()) !== "Loading"
       },
       {
-        timeout: 10000,
-        timeoutMsg: 'Popup message still says "Loading...".',
+        timeout: loadingDelay,
+        timeoutMsg: loadingMessage(browserName as string, loadingDelay),
       },
     )
 
@@ -61,7 +67,6 @@ describe("VODSkipper background tests", () => {
         fixtures.mutedVodID,
         fixtures.unmutedVodID,
       )
-
     expect(cached.mutedSegments).toMatchObject(fixtures.MUTED_SEGMENT_DATA)
     expect(cached.unmutedSegments).toMatchObject(fixtures.UNMUTED_SEGMENT_DATA)
   })

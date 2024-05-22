@@ -149,10 +149,10 @@ describe("VODSkipper popup tests for number of segments", () => {
      * Moving the test itself around in the suite to make sure no prior test info
      * was corrupting the test - didn't work.
      * Using different checks in fetchVodData.ts for AbortErrors - still got TypeError.
-     * Using longer delays as arguments to browser.setupExtPopup. Used longer delays
-     * separately and together - got the same errors.
+     * Using longer delays as arguments to browser.setupExtPopup. Tried increasing
+     * the switch delay and reload delays - got the same errors.
      */
-    await wait(2500)
+    await wait(5000) // wait for the fetch operations to complete
     const cached: Record<string, CacheObjectLiteral> =
       await browser.executeAsync(async (mutedVodID, done) => {
         // get an error when using webextension polyfill's browser namespace,

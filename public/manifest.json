@@ -4,7 +4,7 @@
   "author": "my@email.com",
   "description": "Extension for skipping muted VOD sections on Twitch.tv.",
   "homepage_url": "https://github.com/Thnderbread/twitchextension",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "host_permissions": [
     "https://www.twitch.tv/videos/*"
   ],
