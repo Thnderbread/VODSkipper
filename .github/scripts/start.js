@@ -38,7 +38,6 @@ async function startBrowser(browserName) {
             'dom.disable_open_during_load': false,
             'devtools.chrome.enabled': true,
           },
-          // binary: path.join('C:', 'Program Files', 'Firefox Developer Edition', 'firefox.exe')
         }
       } : { browserName }
   const browser = await remote({
@@ -75,7 +74,8 @@ async function startBrowser(browserName) {
     const permissionLabel = await permissionsContainer.shadow$("label")
 
     const toggleButton = await permissionLabel.$("button")
-    await toggleButton.click()
+    const pressed = !!(await toggleButton.getAttribute("aria-pressed"))
+    if (!pressed) await toggleButton.click()
   }
 
   await browser.execute((url) => {

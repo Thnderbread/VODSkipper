@@ -26,7 +26,7 @@ const ContentScript: React.FC = () => {
         vodUrl: document.location.href,
       })
       if (data !== undefined && data?.length > 0) {
-        console.log(`Found ${data.length} muted segments this vod.`)
+        console.log(`Found ${data.length} muted segments for this vod.`)
         setMutedSegments(data)
       }
     }
