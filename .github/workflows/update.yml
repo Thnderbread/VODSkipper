@@ -1,0 +1,35 @@
+# this workflow merges requests from Dependabot if tests are passing
+# ref https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions
+# and https://github.com/dependabot/fetch-metadata
+name: Auto-merge
+
+on: pull_request_target
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependencies:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+
+    steps:
+      - name: Fetch PR metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v1.3.5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Approve PR
+        run: gh pr review ---approve "$pr-url"
+        env:
+          pr-url: ${{ github.event.pull_request.html_url }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Auto-merge dependabot PRs
+        if: contains(steps.metadata.outputs.package-ecosystem, 'npm')
+        env:
+          pr-url: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+        run: gh pr merge --auto --squash "$pr-url"
