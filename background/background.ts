@@ -5,7 +5,7 @@ import { isValidVod } from "../content-script/utils/utils"
 
 async function handleContentScriptMessage(
   { vodUrl }: GetDataMessage,
-  response: ResponseCallback,
+  response: ResponseCallback
 ): Promise<boolean | undefined> {
   const vodID = isValidVod(vodUrl)
   if (vodID === false) {
@@ -34,5 +34,5 @@ browser.runtime.onMessage.addListener(
       console.warn(`Unsupported action received: ${JSON.stringify(msg)}`)
       return true
     }
-  },
+  }
 )

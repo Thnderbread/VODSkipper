@@ -30,7 +30,7 @@ class MocksWorkerService implements Services.ServiceInstance {
     } catch (error) {
       if (error instanceof Error) {
         throw new SevereServiceError(
-          `some error happened while trying to create the server instance: ${error.message}\n`,
+          `some error happened while trying to create the server instance: ${error.message}\n`
         )
       }
     }
@@ -60,7 +60,7 @@ class MocksWorkerService implements Services.ServiceInstance {
     })
     if (!response.ok) {
       throw new SevereServiceError(
-        `Error while trying to switch collection: ${await response.text()}`,
+        `Error while trying to switch collection: ${await response.text()}`
       )
     }
   }

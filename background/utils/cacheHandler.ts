@@ -17,7 +17,7 @@ export async function cacheSegments(data: CacheObject): Promise<void> {
  * @returns The associated value. Can be an array or undefined.
  */
 export async function checkCache(
-  key: string,
+  key: string
 ): Promise<CacheObjectLiteral | undefined> {
   const cached: CacheObject = await browser.storage.session.get(key)
   return cached[key]

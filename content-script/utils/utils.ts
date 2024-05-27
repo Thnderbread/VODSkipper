@@ -16,10 +16,10 @@ import type {
  */
 export const findNearestMutedSegment = (
   currentTime: number,
-  mutedSegments: MutedVodSegment[],
+  mutedSegments: MutedVodSegment[]
 ): MutedVodSegment => {
   return (
-    mutedSegments.find(segment => {
+    mutedSegments.find((segment) => {
       if (currentTime <= segment.startingOffset) {
         return segment
       } else if (
@@ -45,7 +45,7 @@ the nearest whole number. Will return a default interval of 1000 ms if the resul
  */
 export function calculateInterval(
   startingOffset: number,
-  endingOffset: number,
+  endingOffset: number
 ): number {
   const DEFAULTINTERVAL = 1000
   const difference = endingOffset - startingOffset
@@ -61,7 +61,7 @@ export function calculateInterval(
  */
 export function performSkip(
   video: HTMLVideoElement,
-  endingOffset: number,
+  endingOffset: number
 ): void {
   video.currentTime = endingOffset
 }
@@ -78,7 +78,7 @@ export function performSkip(
 export function createListener(
   startingOffset: number,
   endingOffset: number,
-  video: HTMLVideoElement,
+  video: HTMLVideoElement
 ): NodeJS.Timeout {
   const int = calculateInterval(video.currentTime, startingOffset)
   const listener = setTimeout(() => {

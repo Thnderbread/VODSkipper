@@ -31,7 +31,7 @@ const Popup = (): JSX.Element => {
 
       const handler = (
         changes: Record<string, browser.Storage.StorageChange>,
-        area: string,
+        area: string
       ): void => {
         if (area === "session") {
           const cachedObject = changes[vodId]

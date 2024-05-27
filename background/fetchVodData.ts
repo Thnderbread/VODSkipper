@@ -23,7 +23,7 @@ const BASE_URL = import.meta.env.PROD
  *
  */
 export async function fetchVodData(
-  vodID: string,
+  vodID: string
 ): Promise<MutedSegmentResponse> {
   const requestTimeoutDelay = 5000
   const endpoint = BASE_URL + vodID
@@ -72,7 +72,6 @@ export async function fetchVodData(
   } catch (error: unknown) {
     // used as the default case
     let errorState = FetchResolutions.UNEXPECTED_ERROR
-
     if (controller.signal.aborted) {
       errorState = FetchResolutions.TIMEOUT_ERROR
     } else if (error instanceof TypeError) {

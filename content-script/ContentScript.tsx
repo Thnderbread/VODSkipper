@@ -48,7 +48,7 @@ const ContentScript: React.FC = () => {
         listener.current = createListener(
           nearest.startingOffset,
           nearest.endingOffset,
-          video,
+          video
         )
       }
     }

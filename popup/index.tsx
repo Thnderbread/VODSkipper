@@ -8,6 +8,6 @@ const pluginTagId = "extension-root"
 const component = document.getElementById(pluginTagId)!
 ReactDOM.createRoot(component).render(
   // <React.StrictMode>
-  <App />,
+  <App />
   // </React.StrictMode>
 )
