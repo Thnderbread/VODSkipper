@@ -13,17 +13,27 @@ import {
 } from "./utils/utils"
 
 const ContentScript: React.FC = () => {
+  const [url, setUrl] = useState(location.href)
   const listener = useRef<NodeJS.Timeout | undefined>(undefined)
   const [mutedSegments, setMutedSegments] = useState<MutedVodSegment[]>([])
-
   const video = document.querySelector("video")
 
   // Runs on url changes to account for Twitch's SPA behavior
   useEffect(() => {
+    const urlObserver = new MutationObserver(() => {
+      setUrl(location.href)
+    })
+    urlObserver.observe(document, { subtree: true, childList: true })
+    return () => {
+      urlObserver.disconnect
+    }
+  }, [])
+
+  useEffect(() => {
     async function fetchDataAndSetSegments(): Promise<void> {
       const { data }: GetDataResponse = await browser.runtime.sendMessage({
+        vodUrl: url,
         action: "getData",
-        vodUrl: document.location.href,
       })
       if (data !== undefined && data?.length > 0) {
         console.log(`Found ${data.length} muted segments for this vod.`)
@@ -31,7 +41,7 @@ const ContentScript: React.FC = () => {
       }
     }
     void fetchDataAndSetSegments()
-  }, [document.location.href])
+  }, [url])
 
   // Set up listeners once muted segments are set
   useEffect(() => {
