@@ -22,14 +22,14 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Approve PR
-        run: gh pr review --approve "$pr-url"
+        run: gh pr review --approve "$PR_URL"
         env:
-          pr-url: ${{ github.event.pull_request.html_url }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Auto-merge dependabot PRs
         if: contains(steps.metadata.outputs.package-ecosystem, 'npm')
         env:
-          pr-url: ${{ github.event.pull_request.html_url }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-        run: gh pr merge --auto --squash "$pr-url"
+        run: gh pr merge --auto --squash "$PR_URL"
