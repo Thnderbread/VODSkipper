@@ -60,7 +60,7 @@
     "watch:chrome:script": "sleep 1 && npm run build:chrome:script -- --watch"
   },
   "devDependencies": {
-    "@testing-library/react": "^15.0.7",
+    "@testing-library/react": "^16.0.0",
     "@types/chrome": "^0.0.268",
     "@types/node": "^20.10.1",
     "@types/react": "^18.2.34",
