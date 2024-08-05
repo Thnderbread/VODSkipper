@@ -65,7 +65,7 @@
     "@types/node": "^22.0.0",
     "@types/react": "^18.2.34",
     "@types/webextension-polyfill": "^0.10.1",
-    "@typescript-eslint/parser": "^7.10.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "@vitejs/plugin-react": "^4.0.4",
     "@wdio/browser-runner": "^8.14.6",
     "@wdio/cli": "^8.14.6",
