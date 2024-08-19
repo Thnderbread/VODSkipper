@@ -68,7 +68,7 @@
     "@typescript-eslint/parser": "^8.0.0",
     "@vitejs/plugin-react": "^4.0.4",
     "@wdio/browser-runner": "^8.14.6",
-    "@wdio/cli": "^8.14.6",
+    "@wdio/cli": "^9.0.4",
     "@wdio/firefox-profile-service": "^9.0.4",
     "@wdio/mocha-framework": "^8.14.0",
     "@wdio/spec-reporter": "^9.0.4",
