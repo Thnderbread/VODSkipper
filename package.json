@@ -69,7 +69,7 @@
     "@vitejs/plugin-react": "^4.0.4",
     "@wdio/browser-runner": "^8.14.6",
     "@wdio/cli": "^8.14.6",
-    "@wdio/firefox-profile-service": "^8.31.1",
+    "@wdio/firefox-profile-service": "^9.0.4",
     "@wdio/mocha-framework": "^8.14.0",
     "@wdio/spec-reporter": "^8.14.0",
     "autoprefixer": "^10.4.15",
