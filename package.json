@@ -70,7 +70,7 @@
     "@wdio/browser-runner": "^8.14.6",
     "@wdio/cli": "^9.0.4",
     "@wdio/firefox-profile-service": "^9.0.4",
-    "@wdio/mocha-framework": "^8.14.0",
+    "@wdio/mocha-framework": "^9.0.4",
     "@wdio/spec-reporter": "^9.0.4",
     "autoprefixer": "^10.4.15",
     "chrome-launcher": "^1.0.0",
