@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "@testing-library/react": "^16.0.0",
-    "@types/chrome": "^0.0.317",
+    "@types/chrome": "^0.0.319",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.6",
     "@types/webextension-polyfill": "^0.12.0",
